@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kavya — Study Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+:root {
+  --bg:#1a1035; --violet:#7C3AED; --vl:#A855F7;
+  --teal:#06D6A0; --amber:#F59E0B; --pink:#EC4899; --blue:#60a5fa;
+  --white:#F0F4FF; --muted:#8892b0;
+  --card:rgba(255,255,255,0.055); --cb:rgba(255,255,255,0.09);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:linear-gradient(135deg,#1a1035 0%,#221645 30%,#1e2a4a 60%,#12203a 100%);color:var(--white);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* BG */
+.bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);animation:drift 22s ease-in-out infinite;}
+.o1{width:700px;height:700px;background:rgba(124,58,237,0.2);top:-200px;left:-200px;}
+.o2{width:550px;height:550px;background:rgba(6,214,160,0.13);bottom:-150px;right:-100px;animation-delay:-8s;}
+.o3{width:400px;height:400px;background:rgba(236,72,153,0.1);top:40%;left:40%;animation-delay:-14s;}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(45px,-35px) scale(1.05);}66%{transform:translate(-30px,30px) scale(0.95);}}
+
+/* NAVBAR */
+.navbar{position:sticky;top:0;z-index:100;background:rgba(26,16,53,0.94);border-bottom:1px solid rgba(255,255,255,0.08);backdrop-filter:blur(18px);padding:0 28px;display:flex;align-items:center;height:56px;gap:0;}
+.nav-brand{font-family:'Orbitron',monospace;font-size:0.85rem;font-weight:900;background:linear-gradient(135deg,#c084fc,#06D6A0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-right:32px;white-space:nowrap;}
+.nav-links{display:flex;gap:2px;flex:1;overflow-x:auto;}
+.nav-link{padding:8px 16px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:'Inter',sans-serif;transition:all 0.2s;white-space:nowrap;text-decoration:none;display:flex;align-items:center;gap:6px;}
+.nav-link:hover{background:rgba(255,255,255,0.06);color:var(--white);}
+.nav-link.active{background:rgba(124,58,237,0.22);color:var(--vl);}
+.nav-clock{font-family:'Orbitron',monospace;font-size:0.72rem;color:var(--teal);margin-left:16px;flex-shrink:0;}
+
+/* LAYOUT */
+.app{position:relative;z-index:1;max-width:1320px;margin:0 auto;padding:28px 20px 100px;}
+
+/* HERO STATS */
+.hero-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:13px;margin-bottom:26px;}
+.hero-stat{background:var(--card);border:1px solid var(--cb);border-radius:16px;padding:18px 16px;text-align:center;backdrop-filter:blur(10px);}
+.hero-stat .val{font-family:'Orbitron',monospace;font-size:1.7rem;font-weight:900;margin-bottom:4px;}
+.hero-stat .lbl{font-size:0.62rem;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;}
+.hero-stat .sub{font-size:0.66rem;color:var(--muted);margin-top:3px;}
+
+/* PAGE TABS */
+.page-tabs{display:flex;gap:8px;margin-bottom:26px;background:rgba(255,255,255,0.04);border:1px solid var(--cb);border-radius:16px;padding:6px;}
+.page-tab{flex:1;padding:12px 20px;border-radius:12px;border:none;background:transparent;color:var(--muted);font-family:'Orbitron',monospace;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;cursor:pointer;transition:all 0.25s;text-align:center;}
+.page-tab.active{background:linear-gradient(135deg,rgba(124,58,237,0.4),rgba(6,214,160,0.2));color:var(--white);box-shadow:0 0 20px rgba(124,58,237,0.3);}
+.page-tab:hover:not(.active){background:rgba(255,255,255,0.05);color:var(--white);}
+
+/* TAB CONTENT */
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* SECTION TITLE */
+.sec-title{font-family:'Orbitron',monospace;font-size:0.68rem;letter-spacing:0.22em;color:var(--muted);text-transform:uppercase;margin-bottom:16px;margin-top:8px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--cb);}
+
+/* TRACK GRID */
+.track-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
+@media(max-width:900px){.track-grid{grid-template-columns:1fr;}}
+.track-card{background:var(--card);border:1px solid var(--cb);border-radius:20px;padding:20px;backdrop-filter:blur(12px);}
+
+/* TRACK HEADER */
+.track-header{display:flex;align-items:center;gap:13px;margin-bottom:14px;}
+.track-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.track-title-text{font-size:0.95rem;font-weight:700;color:var(--white);}
+.track-sub-text{font-size:0.68rem;color:var(--muted);margin-top:2px;}
+.track-pct-row{display:flex;justify-content:space-between;font-family:'Orbitron',monospace;font-size:0.68rem;color:var(--muted);margin-bottom:7px;}
+.track-bar{height:6px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;margin-bottom:16px;}
+.track-bar-fill{height:100%;border-radius:4px;transition:width 0.7s ease;}
+
+/* TOPIC ITEM */
+.topic-list{display:flex;flex-direction:column;gap:4px;}
+.topic-item{
+  display:flex;align-items:flex-start;gap:10px;padding:10px 12px;
+  border-radius:11px;border:1px solid transparent;
+  background:rgba(255,255,255,0.025);cursor:pointer;
+  transition:all 0.22s;user-select:none;
+}
+.topic-item:hover{background:rgba(255,255,255,0.055);border-color:rgba(255,255,255,0.08);}
+.topic-item.done{background:rgba(6,214,160,0.09);border-color:rgba(6,214,160,0.28);}
+.topic-item.in-progress{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.28);}
+.topic-check{
+  width:20px;height:20px;border-radius:5px;border:1.5px solid rgba(255,255,255,0.2);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:0.75rem;transition:all 0.22s;margin-top:1px;
+}
+.topic-item.done .topic-check{background:var(--teal);border-color:var(--teal);color:#0a0e1a;font-weight:800;}
+.topic-item.in-progress .topic-check{background:rgba(245,158,11,0.22);border-color:var(--amber);color:var(--amber);}
+.topic-body{flex:1;min-width:0;}
+.topic-name{font-size:0.84rem;font-weight:600;color:var(--white);margin-bottom:2px;line-height:1.3;}
+.topic-item.done .topic-name{text-decoration:line-through;opacity:0.5;}
+.topic-detail{font-size:0.7rem;color:var(--muted);line-height:1.45;}
+.topic-badges{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;}
+.tbadge{font-size:0.58rem;padding:2px 7px;border-radius:7px;font-weight:700;}
+.b-easy{background:rgba(6,214,160,0.15);color:var(--teal);}
+.b-med{background:rgba(245,158,11,0.15);color:var(--amber);}
+.b-hard{background:rgba(236,72,153,0.15);color:var(--pink);}
+.b-core{background:rgba(124,58,237,0.2);color:var(--vl);}
+.b-tool{background:rgba(96,165,250,0.15);color:var(--blue);}
+
+/* PROJECTS */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-bottom:30px;}
+.project-card{background:var(--card);border:1px solid var(--cb);border-radius:16px;padding:18px;backdrop-filter:blur(10px);transition:all 0.25s;}
+.project-card:hover{border-color:rgba(124,58,237,0.4);background:rgba(124,58,237,0.06);}
+.proj-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:9px;}
+.proj-title{font-size:0.88rem;font-weight:700;}
+.proj-status{font-size:0.62rem;padding:3px 9px;border-radius:10px;font-weight:700;flex-shrink:0;}
+.s-planning{background:rgba(96,165,250,0.2);color:var(--blue);}
+.s-building{background:rgba(245,158,11,0.2);color:var(--amber);}
+.s-done{background:rgba(6,214,160,0.2);color:var(--teal);}
+.s-paused{background:rgba(107,114,128,0.2);color:#9ca3af;}
+.proj-tech{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px;}
+.tech-tag{font-size:0.6rem;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,0.07);color:var(--muted);}
+.proj-desc{font-size:0.73rem;color:var(--muted);line-height:1.5;margin-bottom:9px;}
+.proj-bar{height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;}
+.proj-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--violet),var(--teal));transition:width 0.5s;}
+.proj-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.proj-pct{font-family:'Orbitron',monospace;font-size:0.65rem;color:var(--muted);}
+.add-proj-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(124,58,237,0.1);border:1.5px dashed rgba(124,58,237,0.4);border-radius:16px;padding:18px;cursor:pointer;font-size:0.82rem;color:var(--vl);font-weight:600;transition:all 0.2s;min-height:130px;}
+.add-proj-btn:hover{background:rgba(124,58,237,0.2);border-color:var(--violet);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.modal-overlay.open{display:flex;}
+.modal{background:#1e1540;border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:28px;max-width:480px;width:90%;box-shadow:0 24px 80px rgba(0,0,0,0.5);}
+.modal h3{font-size:0.95rem;font-weight:700;margin-bottom:20px;font-family:'Orbitron',monospace;color:var(--vl);}
+.mfield{margin-bottom:13px;}
+.mfield label{font-size:0.68rem;color:var(--muted);display:block;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;}
+.minput,.mselect,.mtextarea{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;color:var(--white);font-size:0.82rem;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;}
+.minput:focus,.mselect:focus,.mtextarea:focus{border-color:var(--violet);}
+.mselect option{background:#1e1540;}
+.mtextarea{resize:vertical;min-height:75px;}
+.mrow{display:flex;gap:10px;}.mrow .mfield{flex:1;}
+.mbtns{display:flex;gap:10px;margin-top:18px;}
+.mbtn-save{flex:1;padding:11px;background:linear-gradient(135deg,var(--violet),var(--vl));border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.84rem;}
+.mbtn-save:hover{opacity:0.88;}
+.mbtn-cancel{padding:11px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--muted);cursor:pointer;font-family:'Inter',sans-serif;font-size:0.84rem;}
+.mbtn-cancel:hover{color:var(--white);}
+
+/* TOAST + CONFETTI */
+.toast{position:fixed;bottom:28px;right:22px;background:rgba(6,214,160,0.13);border:1px solid var(--teal);border-radius:12px;padding:11px 20px;font-size:0.8rem;color:var(--teal);font-weight:600;z-index:9998;transform:translateY(100px);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);backdrop-filter:blur(12px);}
+.toast.show{transform:translateY(0);opacity:1;}
+.confetti-piece{position:fixed;border-radius:2px;pointer-events:none;z-index:9999;animation:cfall 1.3s ease forwards;}
+@keyframes cfall{0%{transform:translateY(-10px) rotate(0deg);opacity:1;}100%{transform:translateY(85vh) rotate(400deg);opacity:0;}}
+::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="bg-canvas"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<nav class="navbar">
+  <div class="nav-brand">KAVYA'S HQ</div>
+  <div class="nav-links">
+    <a class="nav-link" href="kavya-dashboard.html">🏠 Dashboard</a>
+    <a class="nav-link active" href="study-tracker.html">📚 Study Tracker</a>
+    <a class="nav-link" href="kavya-dashboard.html#timerCard" onclick="window.location='kavya-dashboard.html';return true;">⏱ Focus Timer</a>
+  </div>
+  <div class="nav-clock" id="navClock"></div>
+</nav>
+
+<div class="app">
+
+  <!-- HERO STATS -->
+  <div class="hero-stats" style="margin-bottom:22px;">
+    <div class="hero-stat">
+      <div class="val" id="totalPct" style="background:linear-gradient(135deg,#c084fc,#06D6A0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">0%</div>
+      <div class="lbl">Overall</div>
+      <div class="sub" id="totalFrac">0 / 0 topics</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="aiPct" style="color:var(--vl)">0%</div>
+      <div class="lbl">AI Engineering</div>
+      <div class="sub" id="aiFrac">0 / 0</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="fdnPct" style="color:var(--teal)">0%</div>
+      <div class="lbl">SDE Foundations</div>
+      <div class="sub" id="fdnFrac">0 / 0</div>
+    </div>
+    <div class="hero-stat">
+      <div class="val" id="projCount" style="color:var(--pink)">0</div>
+      <div class="lbl">Projects</div>
+      <div class="sub" id="projDone">0 completed</div>
+    </div>
+  </div>
+
+  <!-- PAGE TABS -->
+  <div class="page-tabs">
+    <button class="page-tab active" onclick="switchPage('ai',this)">🤖 AI ENGINEERING</button>
+    <button class="page-tab" onclick="switchPage('fdn',this)">💻 SDE FOUNDATIONS</button>
+    <button class="page-tab" onclick="switchPage('projects',this)">🚀 PROJECTS</button>
+  </div>
+
+  <!-- ======================== AI ENGINEERING TAB ======================== -->
+  <div class="tab-content active" id="tab-ai">
+
+    <div class="sec-title">LLM CORE CONCEPTS</div>
+    <div class="track-grid" id="grid-llm-core"></div>
+
+    <div class="sec-title">WORKING WITH MODELS</div>
+    <div class="track-grid" id="grid-llm-models"></div>
+
+    <div class="sec-title">RAG & RETRIEVAL</div>
+    <div class="track-grid" id="grid-rag"></div>
+
+    <div class="sec-title">FINE-TUNING & ALIGNMENT</div>
+    <div class="track-grid" id="grid-finetune"></div>
+
+    <div class="sec-title">AGENTS & ORCHESTRATION</div>
+    <div class="track-grid" id="grid-agents"></div>
+
+    <div class="sec-title">ML & DEEP LEARNING FOUNDATIONS</div>
+    <div class="track-grid" id="grid-ml"></div>
+
+    <div class="sec-title">MLOPS & EVALUATION</div>
+    <div class="track-grid" id="grid-mlops"></div>
+
+  </div>
+
+  <!-- ======================== FOUNDATIONS TAB ======================== -->
+  <div class="tab-content" id="tab-fdn">
+
+    <div class="sec-title">PROGRAMMING LANGUAGES</div>
+    <div class="track-grid" id="grid-lang"></div>
+
+    <div class="sec-title">FRONTEND</div>
+    <div class="track-grid" id="grid-frontend"></div>
+
+    <div class="sec-title">BACKEND & APIs</div>
+    <div class="track-grid" id="grid-backend"></div>
+
+    <div class="sec-title">DATABASES</div>
+    <div class="track-grid" id="grid-db"></div>
+
+    <div class="sec-title">DEVOPS, CLOUD & SYSTEM DESIGN</div>
+    <div class="track-grid" id="grid-devops"></div>
+
+  </div>
+
+  <!-- ======================== PROJECTS TAB ======================== -->
+  <div class="tab-content" id="tab-projects">
+    <div class="projects-grid" id="projectsGrid"></div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <h3 id="modalTitle">+ LOG NEW PROJECT</h3>
+    <div class="mfield"><label>Project Name</label><input class="minput" id="pName" placeholder="e.g. RAG Chatbot with Eval Suite"></div>
+    <div class="mrow">
+      <div class="mfield"><label>Status</label>
+        <select class="mselect" id="pStatus">
+          <option value="planning">Planning</option>
+          <option value="building">Building</option>
+          <option value="done">Done ✓</option>
+          <option value="paused">Paused</option>
+        </select>
+      </div>
+      <div class="mfield"><label>Progress %</label><input class="minput" id="pProgress" type="number" min="0" max="100" placeholder="0"></div>
+    </div>
+    <div class="mfield"><label>Tech Stack (comma separated)</label><input class="minput" id="pTech" placeholder="Python, FastAPI, Next.js, OpenAI API"></div>
+    <div class="mfield"><label>Description / What you're learning</label><textarea class="mtextarea" id="pDesc" placeholder="What does this project do?"></textarea></div>
+    <div class="mbtns">
+      <button class="mbtn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="mbtn-save" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =====================================================================
+// CURRICULUM DATA
+// =====================================================================
+
+const AI_CURRICULUM = {
+  "grid-llm-core": [
+    {
+      title:"LLMs — How They Actually Work",
+      color:"#7C3AED", bg:"rgba(124,58,237,0.14)", icon:"🧠",
+      topics:[
+        {n:"What is an LLM", d:"Probability distributions over tokens, next-token prediction, why scale matters — parameters as compressed world knowledge", diff:"core"},
+        {n:"Transformer Architecture", d:"Encoder-decoder vs decoder-only, why Transformers replaced RNNs, residual connections, layer norm, feed-forward sublayers", diff:"core"},
+        {n:"Attention Mechanism", d:"Query, Key, Value matrices — how attention scores are computed, why it solves the vanishing gradient problem for long sequences", diff:"hard"},
+        {n:"Multi-Head Attention & Scaled Dot-Product", d:"Why multiple heads, what each head learns, how softmax + scaling prevents gradient issues", diff:"hard"},
+        {n:"Positional Encoding", d:"Sinusoidal vs learned positional embeddings, RoPE (Rotary Position Embedding) used in LLaMA/GPT-4", diff:"med"},
+        {n:"Autoregressive Generation", d:"KV-cache, beam search vs greedy vs sampling, temperature, top-p, top-k — what they actually control", diff:"core"},
+      ]
+    },
+    {
+      title:"Tokenization & Embeddings",
+      color:"#06D6A0", bg:"rgba(6,214,160,0.12)", icon:"🔤",
+      topics:[
+        {n:"Tokenization — BPE & WordPiece", d:"How Byte-Pair Encoding works, why 'tokenization' splits weirdly, vocabulary size tradeoffs, tiktoken vs HuggingFace tokenizers", diff:"core"},
+        {n:"Token IDs & Vocabulary", d:"Special tokens (BOS, EOS, PAD), how prompt + completion gets encoded end-to-end, token counting for cost", diff:"easy"},
+        {n:"Word Embeddings", d:"Word2Vec, GloVe — the intuition behind embedding space, semantic similarity via cosine distance", diff:"med"},
+        {n:"Contextual Embeddings", d:"Why BERT/GPT embeddings differ from Word2Vec — same word, different vectors depending on context", diff:"med"},
+        {n:"Sentence & Document Embeddings", d:"Pooling strategies (mean, CLS token), why embedding models like text-embedding-3 are different from generative LLMs", diff:"core"},
+        {n:"Embedding Space & Similarity Search", d:"Cosine similarity vs dot product vs Euclidean distance, nearest neighbor search intuition — foundation for RAG", diff:"core"},
+      ]
+    }
+  ],
+  "grid-llm-models": [
+    {
+      title:"Frontier Models — APIs & Prompting",
+      color:"#F59E0B", bg:"rgba(245,158,11,0.13)", icon:"🌐",
+      topics:[
+        {n:"OpenAI API — Chat Completions", d:"Messages array structure, system/user/assistant roles, function calling, structured outputs with JSON schema, streaming", diff:"core"},
+        {n:"Anthropic Claude API", d:"Messages format, system prompts, tool use, vision, documents, extended thinking — differences from OpenAI API", diff:"core"},
+        {n:"Google Gemini API", d:"Multimodal inputs (text, image, video, audio), safety settings, grounding with Search", diff:"tool"},
+        {n:"Prompt Engineering", d:"Zero-shot, few-shot, chain-of-thought, ReAct prompting, system prompt design, avoiding prompt injection", diff:"core"},
+        {n:"Context Windows & Cost Optimization", d:"Input vs output token costs, prompt caching (Anthropic), batching API calls, token budgeting strategies", diff:"med"},
+        {n:"Model Selection & Benchmarks", d:"MMLU, HumanEval, HellaSwag — reading leaderboards, choosing between GPT-4o vs Claude vs Gemini for specific tasks", diff:"med"},
+      ]
+    },
+    {
+      title:"Open-Source Models & HuggingFace",
+      color:"#EC4899", bg:"rgba(236,72,153,0.12)", icon:"🤗",
+      topics:[
+        {n:"HuggingFace Hub", d:"Model cards, datasets, Spaces — navigating the ecosystem, GGUF vs safetensors formats, model versioning", diff:"core"},
+        {n:"Transformers Library", d:"AutoTokenizer, AutoModelForCausalLM, pipeline() API — loading any model in 3 lines, device_map='auto'", diff:"core"},
+        {n:"Running Models Locally — Ollama", d:"Installing Ollama, pulling LLaMA/Mistral/Phi/Gemma, Ollama REST API, streaming responses, model management", diff:"core"},
+        {n:"Key Open-Source Models", d:"LLaMA 3.x, Mistral 7B, Phi-3/4, Gemma 2, DeepSeek — knowing when to use each, context lengths, specializations", diff:"med"},
+        {n:"Model Quantization", d:"INT4, INT8, GPTQ, AWQ — why quantization works, quality vs speed tradeoffs, which to use on consumer hardware", diff:"med"},
+        {n:"Inference Optimization", d:"FlashAttention, KV-cache management, batching, vLLM for high-throughput serving, GPU memory arithmetic", diff:"hard"},
+      ]
+    }
+  ],
+  "grid-rag": [
+    {
+      title:"RAG Architecture & Pipeline",
+      color:"#60a5fa", bg:"rgba(96,165,250,0.12)", icon:"🔍",
+      topics:[
+        {n:"Why RAG — the core problem", d:"Hallucination, knowledge cutoff, private data — RAG vs fine-tuning decision framework, when each is appropriate", diff:"core"},
+        {n:"Document Processing & Chunking", d:"Fixed-size chunking, recursive character splitting, sentence-level, semantic chunking with embeddings — chunk overlap strategy", diff:"core"},
+        {n:"Advanced Chunking — Tree-Sitter & Code", d:"AST-based chunking for code, parent-child chunking, hierarchical chunking for preserving document structure", diff:"hard"},
+        {n:"Vector Stores", d:"Chroma (local), FAISS (in-memory), Pinecone/Weaviate (cloud) — HNSW indexing, approximate nearest neighbor algorithms", diff:"core"},
+        {n:"Hybrid Search", d:"Dense (embedding) + sparse (BM25/TF-IDF) retrieval, reciprocal rank fusion (RRF) for combining results", diff:"med"},
+        {n:"Reranking", d:"Cross-encoder rerankers (Cohere, BGE), why two-stage retrieval is more accurate than single-stage, latency tradeoffs", diff:"hard"},
+        {n:"Advanced RAG Techniques", d:"HyDE (Hypothetical Document Embeddings), multi-query retrieval, RAPTOR, contextual compression, LLM-based filtering", diff:"hard"},
+        {n:"RAG Evaluation", d:"MRR (Mean Reciprocal Rank), nDCG, precision@k, recall@k, RAGAS framework for end-to-end RAG evaluation", diff:"hard"},
+      ]
+    },
+    {
+      title:"Multimodal LLMs & Vision",
+      color:"#a78bfa", bg:"rgba(167,139,250,0.12)", icon:"👁️",
+      topics:[
+        {n:"Vision Language Models", d:"GPT-4V, Claude 3 Vision, LLaVA — how image tokens get processed, patch embeddings, image resolution limits", diff:"med"},
+        {n:"Audio & Speech Models", d:"Whisper for STT, TTS APIs, understanding audio tokenization, multimodal context assembly", diff:"med"},
+        {n:"Building Multimodal Pipelines", d:"Combining text + image + audio in one API call, base64 encoding images, handling large files efficiently", diff:"med"},
+        {n:"Document AI", d:"PDF extraction strategies, OCR with vision models, structured data extraction from documents with JSON schema", diff:"med"},
+      ]
+    }
+  ],
+  "grid-finetune": [
+    {
+      title:"Fine-Tuning Theory & Methods",
+      color:"#f472b6", bg:"rgba(244,114,182,0.12)", icon:"🎯",
+      topics:[
+        {n:"When to Fine-Tune vs RAG", d:"Data requirements, latency needs, consistency requirements — the decision matrix for each approach", diff:"core"},
+        {n:"Full Fine-Tuning", d:"Supervised fine-tuning (SFT), dataset format (instruction-following JSON), compute requirements, catastrophic forgetting", diff:"hard"},
+        {n:"LoRA — Low Rank Adaptation", d:"The math behind LoRA — why training low-rank matrices works, rank r selection, alpha scaling parameter", diff:"hard"},
+        {n:"QLoRA — Quantized LoRA", d:"4-bit NF4 quantization + LoRA, bitsandbytes library, how to fine-tune 7B models on a single GPU", diff:"hard"},
+        {n:"PEFT Library — HuggingFace", d:"LoraConfig, TaskType, get_peft_model() — practical fine-tuning with TRL's SFTTrainer", diff:"med"},
+        {n:"Data Curation for Fine-Tuning", d:"Instruction dataset formats (Alpaca, ShareGPT, ChatML), synthetic data generation, quality filtering", diff:"med"},
+      ]
+    },
+    {
+      title:"Alignment & Preference Optimization",
+      color:"#34d399", bg:"rgba(52,211,153,0.12)", icon:"⚖️",
+      topics:[
+        {n:"RLHF — Reinforcement Learning from Human Feedback", d:"Reward model training, PPO optimization loop — how ChatGPT was aligned, why naive SFT isn't enough", diff:"hard"},
+        {n:"DPO — Direct Preference Optimization", d:"Why DPO eliminates the reward model, chosen vs rejected pairs format, DPOTrainer in TRL", diff:"hard"},
+        {n:"Constitutional AI & Self-Critique", d:"Anthropic's approach — model critiques its own outputs against a constitution, scalable oversight techniques", diff:"med"},
+        {n:"Evaluation After Fine-Tuning", d:"MT-Bench, AlpacaEval, domain-specific evals — measuring if fine-tuning improved target behavior without regression", diff:"med"},
+      ]
+    }
+  ],
+  "grid-agents": [
+    {
+      title:"Agent Fundamentals & Patterns",
+      color:"#fb923c", bg:"rgba(251,146,60,0.12)", icon:"🤖",
+      topics:[
+        {n:"What Makes an Agent", d:"LLM + tools + memory + planning — the four components, difference between a chain and an agent, when to use agents", diff:"core"},
+        {n:"ReAct Pattern", d:"Reason + Act in a loop — thought/action/observation cycles, how the LLM decides which tool to call and when to stop", diff:"core"},
+        {n:"Tool / Function Calling", d:"JSON schema for tools, parallel tool calls, handling tool results, OpenAI vs Anthropic tool use syntax", diff:"core"},
+        {n:"Agent Memory Systems", d:"In-context (conversation history), external (vector DB), episodic (past runs), procedural (fine-tuned behavior)", diff:"med"},
+        {n:"Plan-and-Execute Pattern", d:"Separating planning from execution, why it works better for complex multi-step tasks than pure ReAct", diff:"med"},
+        {n:"Agent Reliability & Guardrails", d:"Handling infinite loops, tool call validation, fallback strategies, output parsing robustness", diff:"hard"},
+      ]
+    },
+    {
+      title:"Agent Frameworks & Orchestration",
+      color:"#e879f9", bg:"rgba(232,121,249,0.12)", icon:"🕸️",
+      topics:[
+        {n:"LangChain — Chains & Agents", d:"LangChain Expression Language (LCEL), RunnableSequence, AgentExecutor, built-in tools (SerpAPI, calculator)", diff:"med"},
+        {n:"LangGraph — Stateful Graphs", d:"StateGraph, nodes as functions, edges as conditionals, checkpointing for long-running agents, human-in-the-loop", diff:"hard"},
+        {n:"OpenAI Agents SDK", d:"Agent class, handoffs between agents, tracing, the lightweight alternative to LangGraph for OpenAI-centric apps", diff:"med"},
+        {n:"CrewAI — Role-Based Agents", d:"Agent roles, tasks, crews — low-code multi-agent orchestration, when CrewAI beats LangGraph", diff:"med"},
+        {n:"MCP — Model Context Protocol", d:"Anthropic's open protocol for tool/resource connections, MCP servers, connecting Claude to external services", diff:"med"},
+        {n:"Multi-Agent Patterns", d:"Orchestrator-worker, supervisor-subagent, collaborative critique — when to split into multiple agents vs one capable agent", diff:"hard"},
+      ]
+    }
+  ],
+  "grid-ml": [
+    {
+      title:"Math & ML Fundamentals",
+      color:"#F59E0B", bg:"rgba(245,158,11,0.12)", icon:"📐",
+      topics:[
+        {n:"Linear Algebra for ML", d:"Vectors, matrices, matrix multiplication — why ML is matrix multiplication, eigenvalues, SVD for dimensionality reduction", diff:"hard"},
+        {n:"Calculus & Gradient Descent", d:"Partial derivatives, chain rule (why backprop works), gradient descent variants — SGD, Adam, AdaW, learning rate schedules", diff:"hard"},
+        {n:"Probability & Information Theory", d:"Probability distributions, Bayes theorem, cross-entropy loss, KL divergence — why these are the foundations of LLM training", diff:"hard"},
+        {n:"Classical ML — Scikit-learn", d:"Linear/logistic regression, decision trees, random forests, XGBoost — when to use traditional ML over DL", diff:"med"},
+        {n:"Neural Networks from Scratch", d:"Forward pass, loss computation, backpropagation by hand — build a simple MLP in NumPy to truly understand what PyTorch does", diff:"hard"},
+      ]
+    },
+    {
+      title:"Deep Learning with PyTorch",
+      color:"#7C3AED", bg:"rgba(124,58,237,0.12)", icon:"🔥",
+      topics:[
+        {n:"PyTorch Core", d:"Tensors, autograd, computational graphs, nn.Module, DataLoader, Dataset — the fundamental building blocks", diff:"med"},
+        {n:"Training Loop Fundamentals", d:"Forward pass → loss → backward → optimizer.step() — understanding what happens at each step, gradient clipping, gradient accumulation", diff:"med"},
+        {n:"CNNs", d:"Convolutional layers, pooling, receptive fields, ResNet skip connections — image classification as the canonical DL task", diff:"med"},
+        {n:"Transformers in PyTorch", d:"Implementing multi-head attention from scratch, positional encoding, the full Transformer block — connects theory to practice", diff:"hard"},
+        {n:"Training at Scale", d:"Mixed precision (fp16/bf16), gradient checkpointing, DataParallel vs DistributedDataParallel, GPU memory management", diff:"hard"},
+        {n:"Experiment Tracking — W&B", d:"wandb.init, logging metrics/gradients/artifacts, comparing runs, sweeps for hyperparameter optimization", diff:"tool"},
+      ]
+    }
+  ],
+  "grid-mlops": [
+    {
+      title:"LLM Evaluation & Testing",
+      color:"#60a5fa", bg:"rgba(96,165,250,0.12)", icon:"📊",
+      topics:[
+        {n:"LLM Evaluation Frameworks", d:"RAGAS (RAG evaluation), LangSmith tracing, OpenAI Evals, building custom eval harnesses with pairwise comparison", diff:"core"},
+        {n:"Metrics for Generation", d:"BLEU, ROUGE (why they're limited), BERTScore, G-Eval using LLM-as-judge, human preference evaluation", diff:"med"},
+        {n:"RAG Evaluation Deep Dive", d:"Answer relevance, context precision, context recall, faithfulness — building an eval suite that catches retrieval failures", diff:"hard"},
+        {n:"Prompt Testing & Red-Teaming", d:"Systematic prompt regression testing, adversarial prompts, jailbreak patterns — building robust prompts that don't break", diff:"med"},
+      ]
+    },
+    {
+      title:"MLOps & Production AI",
+      color:"#34d399", bg:"rgba(52,211,153,0.12)", icon:"🚀",
+      topics:[
+        {n:"Model Serving", d:"FastAPI inference endpoints, Triton Inference Server, vLLM for high-throughput, BentoML for packaging", diff:"med"},
+        {n:"Deployment Platforms", d:"Modal.com (GPU serverless), Replicate, HuggingFace Inference Endpoints, AWS SageMaker — cost vs control tradeoffs", diff:"med"},
+        {n:"Observability for LLM Apps", d:"LangSmith, Langfuse, Helicone — tracing every LLM call, latency tracking, token cost dashboards", diff:"tool"},
+        {n:"Vector DB Operations", d:"Index management, incremental updates, namespace isolation, production Pinecone/Weaviate patterns", diff:"med"},
+        {n:"Gradio & Streamlit for Demos", d:"Building prototype UIs that non-engineers can use — Gradio Blocks, sharing demos publicly, HuggingFace Spaces deployment", diff:"tool"},
+      ]
+    }
+  ]
+};
+
+const FDN_CURRICULUM = {
+  "grid-lang": [
+    {
+      title:"Python — Deep & Practical",
+      color:"#F59E0B", bg:"rgba(245,158,11,0.12)", icon:"🐍",
+      topics:[
+        {n:"Python Fundamentals", d:"Data structures (list, dict, set, tuple), comprehensions, unpacking, f-strings — fast-path for someone coming from JS/C#", diff:"easy"},
+        {n:"OOP in Python", d:"Classes, dunder methods (__repr__, __len__, __iter__), dataclasses, abstract base classes, properties", diff:"med"},
+        {n:"Functional Python", d:"map/filter/reduce, lambda, itertools, functools — writing clean data transformation pipelines", diff:"med"},
+        {n:"Decorators & Context Managers", d:"@functools.wraps, writing custom decorators, __enter__/__exit__, contextlib.contextmanager — used everywhere in ML code", diff:"med"},
+        {n:"Typing & Type Hints", d:"Type annotations, Optional, Union, TypeVar, Pydantic for data validation — essential for production Python", diff:"med"},
+        {n:"Async Python", d:"async/await, asyncio event loop, aiofiles, httpx async client — crucial for high-throughput LLM API calls", diff:"med"},
+        {n:"Python Performance", d:"Profiling with cProfile, NumPy vectorization, Cython basics, understanding the GIL — writing Python that doesn't slow down your AI app", diff:"hard"},
+      ]
+    },
+    {
+      title:"C# & .NET — Production Track",
+      color:"#7C3AED", bg:"rgba(124,58,237,0.12)", icon:"⚙️",
+      topics:[
+        {n:"C# Fundamentals", d:"Value vs reference types, nullable reference types, records, pattern matching, switch expressions — C# 10/11/12 features", diff:"easy"},
+        {n:"LINQ — Language Integrated Query", d:"Deferred execution, method syntax vs query syntax, SelectMany, GroupBy, Aggregate — used daily at NYS ITS", diff:"med"},
+        {n:"Async C# — Task & async/await", d:"Task<T>, ConfigureAwait, CancellationToken, IAsyncEnumerable — proper async patterns in .NET", diff:"med"},
+        {n:".NET Core — DI & Middleware", d:"IServiceCollection, IHostedService, middleware pipeline, configuration with IOptions<T> — ASP.NET Core internals", diff:"med"},
+        {n:"ASP.NET Web API", d:"Controller vs minimal API, model binding, validation, filters, ActionResult<T>, API versioning", diff:"med"},
+        {n:"Design Patterns in C#", d:"Repository, Unit of Work, CQRS with MediatR, Factory, Strategy — SOLID applied to real .NET codebases", diff:"hard"},
+        {n:"Entity Framework Core", d:"DbContext, migrations, navigation properties, eager vs lazy loading, compiled queries for performance", diff:"med"},
+      ]
+    }
+  ],
+  "grid-frontend": [
+    {
+      title:"JavaScript & TypeScript",
+      color:"#F59E0B", bg:"rgba(245,158,11,0.12)", icon:"📜",
+      topics:[
+        {n:"JavaScript ES6+ Deep Dive", d:"Closures, prototype chain, event loop & microtask queue, generators, Symbol, Proxy — the parts that confuse everyone", diff:"med"},
+        {n:"Promises & Async/Await", d:"Promise chaining, Promise.all/race/allSettled, error propagation, async iteration — debugging async stacks", diff:"med"},
+        {n:"TypeScript — Types & Generics", d:"Type inference, interface vs type alias, generics with constraints, conditional types, mapped types, utility types", diff:"med"},
+        {n:"TypeScript Advanced", d:"Discriminated unions, template literal types, infer keyword, declaration merging — the TypeScript features in large codebases", diff:"hard"},
+        {n:"Module Systems", d:"ESM vs CommonJS, dynamic imports, tree-shaking, bundler concepts (Vite, Webpack, esbuild, Rollup)", diff:"med"},
+      ]
+    },
+    {
+      title:"React & Next.js",
+      color:"#EC4899", bg:"rgba(236,72,153,0.12)", icon:"⚛️",
+      topics:[
+        {n:"React Hooks Deep Dive", d:"useState, useEffect, useRef, useMemo, useCallback — understanding when re-renders happen and how to prevent unnecessary ones", diff:"med"},
+        {n:"State Management", d:"useContext + useReducer, Zustand, Jotai — when global state is needed vs component state, avoiding prop drilling", diff:"med"},
+        {n:"Data Fetching Patterns", d:"React Query (TanStack Query), SWR — caching, background refetching, optimistic updates, infinite scroll", diff:"med"},
+        {n:"Next.js App Router", d:"Server vs client components, Server Actions, route handlers, layouts, loading/error boundaries, parallel routes", diff:"med"},
+        {n:"Next.js — SSR, SSG, ISR", d:"getServerSideProps vs generateStaticParams, incremental static regeneration, when each rendering strategy makes sense", diff:"med"},
+        {n:"Styling — Tailwind CSS", d:"Utility-first philosophy, responsive prefixes, dark mode, custom design tokens, Tailwind with shadcn/ui", diff:"easy"},
+        {n:"Testing React", d:"Jest + React Testing Library (what to test and what not to test), user-event, mocking modules, Playwright for E2E", diff:"med"},
+      ]
+    }
+  ],
+  "grid-backend": [
+    {
+      title:"APIs & Backend Design",
+      color:"#06D6A0", bg:"rgba(6,214,160,0.12)", icon:"🔌",
+      topics:[
+        {n:"RESTful API Design", d:"Resource naming, HTTP verbs, idempotency, status codes, versioning, HATEOAS — API design that scales", diff:"easy"},
+        {n:"FastAPI — Python Backend", d:"Pydantic models, path/query params, dependency injection, middleware, background tasks, WebSocket support", diff:"med"},
+        {n:"Authentication — JWT & OAuth2", d:"JWT structure (header.payload.signature), access vs refresh tokens, OAuth2 PKCE flow, session vs token tradeoffs", diff:"med"},
+        {n:"WebSockets & Streaming", d:"SSE (Server-Sent Events) for LLM streaming, WebSocket for real-time apps — implementing streaming in FastAPI/Next.js", diff:"med"},
+        {n:"API Security", d:"CORS, rate limiting, input validation, SQL injection prevention, OWASP top 10 — securing AI-powered APIs", diff:"med"},
+        {n:"Microservices Architecture", d:"Service decomposition, inter-service communication (REST vs gRPC vs message queues), saga pattern", diff:"hard"},
+      ]
+    },
+    {
+      title:"Node.js & Runtime Concepts",
+      color:"#60a5fa", bg:"rgba(96,165,250,0.12)", icon:"🟢",
+      topics:[
+        {n:"Node.js Event Loop", d:"Call stack, callback queue, microtask queue — why Node.js handles 10k connections but blocks on CPU tasks", diff:"med"},
+        {n:"Node.js HTTP & Streams", d:"IncomingMessage, readable/writable streams, pipe() — streaming large responses without buffering entire response", diff:"med"},
+        {n:"Package Management", d:"npm vs pnpm vs yarn, lockfiles, semantic versioning, monorepo with Turborepo/Nx — managing large JS projects", diff:"easy"},
+        {n:"BullMQ & Job Queues", d:"Redis-backed job queues, concurrency, retries, delayed jobs — async background processing for AI tasks", diff:"med"},
+      ]
+    }
+  ],
+  "grid-db": [
+    {
+      title:"SQL & Relational Databases",
+      color:"#a78bfa", bg:"rgba(167,139,250,0.12)", icon:"🗃️",
+      topics:[
+        {n:"SQL Mastery", d:"Complex JOINs, subqueries, CTEs (WITH), window functions (ROW_NUMBER, RANK, LAG/LEAD), EXPLAIN plans", diff:"med"},
+        {n:"PostgreSQL Advanced", d:"JSONB columns, full-text search (tsvector), partial indexes, table partitioning, connection pooling with PgBouncer", diff:"med"},
+        {n:"SQL Server & T-SQL", d:"Stored procedures, triggers, CTEs, execution plans, tempdb — practical knowledge from NYS ITS internship", diff:"med"},
+        {n:"Database Design", d:"Normalization (1NF-3NF), ER diagrams, choosing between normalized vs denormalized for read-heavy vs write-heavy apps", diff:"med"},
+      ]
+    },
+    {
+      title:"NoSQL, Caching & Vector DBs",
+      color:"#EC4899", bg:"rgba(236,72,153,0.12)", icon:"🔴",
+      topics:[
+        {n:"MongoDB — Document Model", d:"Schema design, aggregation pipeline ($match, $group, $lookup), indexes (compound, text, geospatial), Atlas Search", diff:"med"},
+        {n:"Redis — Caching & Data Structures", d:"String, Hash, List, Set, Sorted Set — caching patterns (cache-aside, write-through), pub/sub, Redis Streams", diff:"med"},
+        {n:"Vector Databases", d:"Chroma (local dev), Pinecone (production), pgvector (Postgres extension) — index types, namespaces, metadata filtering", diff:"med"},
+        {n:"Database Performance", d:"Index strategies, query optimization, N+1 problem, caching layers, read replicas — making your AI app not melt under load", diff:"hard"},
+        {n:"Supabase", d:"Postgres + Auth + Storage + Realtime in one — RLS (Row Level Security), Edge Functions, using pgvector for RAG", diff:"tool"},
+      ]
+    }
+  ],
+  "grid-devops": [
+    {
+      title:"DevOps & Infrastructure",
+      color:"#F59E0B", bg:"rgba(245,158,11,0.12)", icon:"🛠️",
+      topics:[
+        {n:"Git — Advanced", d:"Rebase vs merge, cherry-pick, reflog for recovery, bisect for finding bugs, squashing commits, PR best practices", diff:"easy"},
+        {n:"Linux & Terminal", d:"File permissions, processes (ps, kill, top), cron jobs, bash scripting, SSH, networking commands (curl, netstat)", diff:"med"},
+        {n:"Docker", d:"Dockerfile best practices (multi-stage builds, layer caching), docker-compose for local dev, networking, volumes", diff:"med"},
+        {n:"Kubernetes", d:"Pods, Deployments, Services, Ingress, ConfigMaps, Secrets, HPA (autoscaling) — deploying AI apps on K8s", diff:"hard"},
+        {n:"CI/CD — GitHub Actions", d:"Workflow files, jobs, secrets, caching dependencies, building and pushing Docker images, deploying on merge", diff:"med"},
+      ]
+    },
+    {
+      title:"AWS & System Design",
+      color:"#fb923c", bg:"rgba(251,146,60,0.12)", icon:"☁️",
+      topics:[
+        {n:"AWS Core Services", d:"EC2, S3, Lambda, RDS, SQS, SNS, IAM — already certified, focus on patterns: when Lambda vs EC2, S3 event triggers", diff:"med"},
+        {n:"AWS for AI/ML", d:"SageMaker (training & endpoints), Bedrock (managed LLM APIs), ECR (container registry), ECS (container orchestration)", diff:"med"},
+        {n:"System Design Fundamentals", d:"CAP theorem, load balancing (round-robin, least connections), horizontal vs vertical scaling, stateless design", diff:"hard"},
+        {n:"Caching Strategies", d:"CDN (CloudFront), application-level caching, cache invalidation strategies, consistent hashing for distributed caches", diff:"hard"},
+        {n:"Security Fundamentals", d:"OWASP Top 10, secrets management (AWS Secrets Manager, Vault), HTTPS/TLS, penetration testing basics", diff:"med"},
+        {n:"Observability", d:"Structured logging (JSON), distributed tracing (OpenTelemetry), metrics (Prometheus + Grafana), alerting strategies", diff:"hard"},
+      ]
+    }
+  ]
+};
+
+// =====================================================================
+// STORAGE
+// =====================================================================
+const SK = 'kavya_study_v3';
+function loadState() {
+  const r = localStorage.getItem(SK);
+  return r ? JSON.parse(r) : { completed:{}, inProgress:{}, projects:[] };
+}
+function saveState() { localStorage.setItem(SK, JSON.stringify(st)); }
+let st = loadState();
+
+// =====================================================================
+// CYCLE: none → in-progress → done → none
+// =====================================================================
+function cycleStatus(key) {
+  const done = !!st.completed[key];
+  const inp = !!st.inProgress[key];
+  if (!done && !inp) {
+    st.inProgress[key] = true;
+  } else if (inp && !done) {
+    delete st.inProgress[key];
+    st.completed[key] = true;
+    confetti();
+    toast('✅ Topic mastered!');
+  } else {
+    delete st.completed[key];
+  }
+  saveState();
+  renderAll();
+}
+
+// =====================================================================
+// RENDER A TRACK GROUP
+// =====================================================================
+function renderGrid(gridId, sections) {
+  const container = document.getElementById(gridId);
+  if (!container) return;
+  container.innerHTML = '';
+  sections.forEach(sec => {
+    const total = sec.topics.length;
+    const doneCount = sec.topics.filter((_,i) => st.completed[`${gridId}_${sec.title}_${i}`]).length;
+    const inpCount = sec.topics.filter((_,i) => st.inProgress[`${gridId}_${sec.title}_${i}`]).length;
+    const pct = total > 0 ? Math.round((doneCount/total)*100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'track-card';
+    card.innerHTML = `
+      <div class="track-header">
+        <div class="track-icon" style="background:${sec.bg}">${sec.icon}</div>
+        <div>
+          <div class="track-title-text">${sec.title}</div>
+          <div class="track-sub-text">${total} topics &nbsp;·&nbsp; ${doneCount} done &nbsp;·&nbsp; ${inpCount} in progress</div>
+        </div>
+      </div>
+      <div class="track-pct-row"><span>${pct}% mastered</span><span>${doneCount}/${total}</span></div>
+      <div class="track-bar"><div class="track-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${sec.color},${sec.color}99)"></div></div>
+      <div class="topic-list">
+        ${sec.topics.map((tp,i) => {
+          const key = `${gridId}_${sec.title}_${i}`;
+          const done = !!st.completed[key];
+          const inp = !!st.inProgress[key];
+          const diffMap = {easy:'b-easy',med:'b-med',hard:'b-hard',core:'b-core',tool:'b-tool'};
+          const diffLabel = {easy:'easy',med:'medium',hard:'hard',core:'core',tool:'tool'};
+          return `<div class="topic-item ${done?'done':inp?'in-progress':''}" onclick="cycleStatus('${key}')">
+            <div class="topic-check">${done?'✓':inp?'~':''}</div>
+            <div class="topic-body">
+              <div class="topic-name">${tp.n}</div>
+              <div class="topic-detail">${tp.d}</div>
+              <div class="topic-badges"><span class="tbadge ${diffMap[tp.diff]||'b-med'}">${diffLabel[tp.diff]||tp.diff}</span></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// =====================================================================
+// RENDER ALL TRACKS
+// =====================================================================
+function renderAllTracks() {
+  Object.entries(AI_CURRICULUM).forEach(([gridId, sections]) => renderGrid(gridId, sections));
+  Object.entries(FDN_CURRICULUM).forEach(([gridId, sections]) => renderGrid(gridId, sections));
+}
+
+// =====================================================================
+// HERO STATS
+// =====================================================================
+function calcStats() {
+  let aiTotal=0,aiDone=0,fdnTotal=0,fdnDone=0;
+  Object.entries(AI_CURRICULUM).forEach(([gridId,secs]) => {
+    secs.forEach(sec => sec.topics.forEach((_,i) => {
+      aiTotal++;
+      if(st.completed[`${gridId}_${sec.title}_${i}`]) aiDone++;
+    }));
+  });
+  Object.entries(FDN_CURRICULUM).forEach(([gridId,secs]) => {
+    secs.forEach(sec => sec.topics.forEach((_,i) => {
+      fdnTotal++;
+      if(st.completed[`${gridId}_${sec.title}_${i}`]) fdnDone++;
+    }));
+  });
+  const total=aiTotal+fdnTotal, done=aiDone+fdnDone;
+  const pct = total>0?Math.round((done/total)*100):0;
+  document.getElementById('totalPct').textContent = pct+'%';
+  document.getElementById('totalFrac').textContent = `${done} / ${total} topics`;
+  document.getElementById('aiPct').textContent = aiTotal>0?Math.round((aiDone/aiTotal)*100)+'%':'0%';
+  document.getElementById('aiFrac').textContent = `${aiDone}/${aiTotal}`;
+  document.getElementById('fdnPct').textContent = fdnTotal>0?Math.round((fdnDone/fdnTotal)*100)+'%':'0%';
+  document.getElementById('fdnFrac').textContent = `${fdnDone}/${fdnTotal}`;
+  const projDone = st.projects.filter(p=>p.status==='done').length;
+  document.getElementById('projCount').textContent = st.projects.length;
+  document.getElementById('projDone').textContent = `${projDone} completed`;
+}
+
+// =====================================================================
+// PROJECTS
+// =====================================================================
+let editIdx = null;
+function renderProjects() {
+  const grid = document.getElementById('projectsGrid');
+  grid.innerHTML = '';
+  st.projects.forEach((p,i) => {
+    const sc = `s-${p.status}`;
+    const sl = {planning:'Planning',building:'Building',done:'Done ✓',paused:'Paused'}[p.status]||p.status;
+    const techs = (p.tech||'').split(',').map(t=>t.trim()).filter(Boolean);
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    card.innerHTML = `
+      <div class="proj-header">
+        <div class="proj-title">${esc(p.name)}</div>
+        <div class="proj-status ${sc}">${sl}</div>
+      </div>
+      <div class="proj-tech">${techs.map(t=>`<span class="tech-tag">${esc(t)}</span>`).join('')}</div>
+      <div class="proj-desc">${esc(p.desc||'No description yet.')}</div>
+      <div class="proj-bar"><div class="proj-bar-fill" style="width:${p.progress||0}%"></div></div>
+      <div class="proj-footer">
+        <span class="proj-pct">${p.progress||0}% complete</span>
+        <span style="display:flex;gap:6px;">
+          <button onclick="openModal(${i})" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:7px;padding:3px 10px;color:var(--vl);font-size:0.68rem;cursor:pointer;font-family:'Inter',sans-serif;">Edit</button>
+          <button onclick="delProj(${i})" style="background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.25);border-radius:7px;padding:3px 10px;color:var(--pink);font-size:0.68rem;cursor:pointer;font-family:'Inter',sans-serif;">✕</button>
+        </span>
+      </div>`;
+    grid.appendChild(card);
+  });
+  const add = document.createElement('div');
+  add.className = 'add-proj-btn';
+  add.onclick = ()=>openModal(null);
+  add.innerHTML = '<span style="font-size:1.5rem">+</span> Log New Project';
+  grid.appendChild(add);
+}
+
+function openModal(idx) {
+  editIdx = idx;
+  document.getElementById('modalTitle').textContent = idx!==null?'EDIT PROJECT':'+ LOG NEW PROJECT';
+  const p = idx!==null ? st.projects[idx] : {};
+  document.getElementById('pName').value = p.name||'';
+  document.getElementById('pStatus').value = p.status||'planning';
+  document.getElementById('pProgress').value = p.progress||'';
+  document.getElementById('pTech').value = p.tech||'';
+  document.getElementById('pDesc').value = p.desc||'';
+  document.getElementById('projectModal').classList.add('open');
+}
+function closeModal(){ document.getElementById('projectModal').classList.remove('open'); }
+function saveProject(){
+  const name=document.getElementById('pName').value.trim();
+  if(!name){toast('⚠️ Enter a project name');return;}
+  const p={name,status:document.getElementById('pStatus').value,progress:parseInt(document.getElementById('pProgress').value)||0,tech:document.getElementById('pTech').value,desc:document.getElementById('pDesc').value};
+  if(editIdx!==null) st.projects[editIdx]=p; else st.projects.push(p);
+  saveState(); closeModal(); renderAll();
+  toast(editIdx!==null?'✏️ Project updated!':'🚀 Project logged!');
+}
+function delProj(i){ if(!confirm('Delete?'))return; st.projects.splice(i,1); saveState(); renderAll(); }
+document.getElementById('projectModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// =====================================================================
+// PAGE TABS
+// =====================================================================
+function switchPage(page, btn) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+page).classList.add('active');
+  btn.classList.add('active');
+}
+
+// =====================================================================
+// HELPERS
+// =====================================================================
+function renderAll(){ renderAllTracks(); renderProjects(); calcStats(); }
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400);}
+const CC=['#7C3AED','#06D6A0','#EC4899','#F59E0B','#60a5fa'];
+function confetti(){for(let i=0;i<12;i++){const p=document.createElement('div');p.className='confetti-piece';p.style.cssText=`left:${25+Math.random()*50}vw;top:35vh;background:${CC[i%5]};width:${5+Math.random()*7}px;height:${5+Math.random()*7}px;animation-delay:${Math.random()*0.3}s;animation-duration:${0.9+Math.random()*0.5}s;`;document.body.appendChild(p);setTimeout(()=>p.remove(),1500);}}
+function updateClock(){const t=new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});document.getElementById('navClock').textContent=t+' EST';}
+
+// =====================================================================
+// INIT
+// =====================================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  renderAll();
+  updateClock();
+  setInterval(updateClock,1000);
+});
+</script>
+</body>
+</html>
