@@ -1,7 +1,9 @@
-const CACHE = 'kavya-hq-v1';
+const CACHE = 'kavya-hq-v2';
 const ASSETS = [
   '/',
   '/kavya-dashboard.html',
+  '/timer.html',
+  '/weekly-plan.html',
   '/study-tracker.html',
   '/icon.svg'
 ];
@@ -21,7 +23,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Don't intercept Firebase or Google API requests
   const url = e.request.url;
   if (url.includes('firebase') || url.includes('googleapis') || url.includes('gstatic')) return;
 
