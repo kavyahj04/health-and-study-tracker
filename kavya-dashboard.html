@@ -455,6 +455,10 @@ body {
     <a class="nav-link" href="study-tracker.html">📚 Study Tracker</a>
     <a class="nav-link" href="#timer" onclick="document.getElementById('timerCard')?.scrollIntoView({behavior:'smooth'});return false;">⏱ Focus Timer</a>
   </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;padding-left:16px;flex-shrink:0;">
+    <span id="syncStatus" style="font-size:0.68rem;font-family:'Orbitron',monospace;letter-spacing:0.05em;"></span>
+    <button id="signOutBtn" onclick="doSignOut()" style="display:none;padding:5px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--muted)'">Sign Out</button>
+  </div>
 </nav>
 
 <div class="bg-canvas">
@@ -767,18 +771,51 @@ body {
 
 <div class="toast" id="toast"></div>
 
+<!-- AUTH OVERLAY -->
+<div id="authOverlay" style="position:fixed;inset:0;z-index:10000;background:rgba(26,16,53,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;backdrop-filter:blur(20px);">
+  <div style="font-family:'Orbitron',monospace;font-size:clamp(1.3rem,3vw,2rem);font-weight:900;background:linear-gradient(135deg,#c084fc,#06D6A0,#EC4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:0.06em;">KAVYA'S HQ</div>
+  <div style="width:60px;height:2px;background:linear-gradient(90deg,#7C3AED,#06D6A0);border-radius:2px;"></div>
+  <div style="font-size:0.88rem;color:rgba(240,244,255,0.6);max-width:340px;text-align:center;line-height:1.7;">Sign in with Google to sync your tracker across all your devices — iPad, laptop, anywhere.</div>
+  <button onclick="signInGoogle()" style="display:flex;align-items:center;gap:12px;padding:15px 32px;background:white;border:none;border-radius:14px;cursor:pointer;font-size:0.92rem;font-weight:700;color:#1a1a2e;font-family:'Inter',sans-serif;transition:all 0.2s;box-shadow:0 4px 24px rgba(0,0,0,0.35);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 32px rgba(0,0,0,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 24px rgba(0,0,0,0.35)'">
+    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    Continue with Google
+  </button>
+  <div style="font-size:0.7rem;color:var(--muted);opacity:0.55;">Your data is private — secured by Firebase &amp; Google</div>
+</div>
+
+<!-- Firebase SDK (compat mode — no build step needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script>
+// =====================================================================
+// FIREBASE CONFIG — fill this in from your Firebase project console
+// =====================================================================
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA5n_AsRjlR_IIaD9x75IjaH3bW-KDW2wE",
+  authDomain: "kavya-hq.firebaseapp.com",
+  projectId: "kavya-hq",
+  storageBucket: "kavya-hq.firebasestorage.app",
+  messagingSenderId: "757036313319",
+  appId: "1:757036313319:web:5d5710622f059f49aa5042",
+  measurementId: "G-EN8SKZ2YER"
+};
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let currentUser = null;
+let unsubSnapshot = null;
+let notesDebounce = null;
+let isRemoteUpdate = false;
+
 // =====================================================================
 // STATE
 // =====================================================================
 const SK = 'kavya_hq_v4';
-
-function nowEST() {
-  // Always use EST offset: UTC-5 (EST) / UTC-4 (EDT)
-  const now = new Date();
-  // Use Intl to get EST date string parts
-  return now; // We'll format with timeZone option
-}
 
 function todayStringEST() {
   const now = new Date();
@@ -794,44 +831,12 @@ function defaultState() {
     notes: '',
     streak: 0,
     bestStreak: 0,
-    waterFilled: [false,false,false,false], // [1L, 1L, 1L, 0.5L]
+    waterFilled: [false,false,false,false],
     calories: 0,
-    history: {},       // { 'MM/DD/YYYY': pct }
-    timerSessions: [], // today's completed/partial sessions: { type:'50'|'30'|'partial', mins:N }
+    history: {},
+    timerSessions: [],
     timerTotalMins: 0
   };
-}
-
-function getState() {
-  const raw = localStorage.getItem(SK);
-  if (!raw) return defaultState();
-  let s = JSON.parse(raw);
-  const today = todayStringEST();
-  if (s.lastDate !== today) {
-    // Archive yesterday
-    const yPct = calcPct(s);
-    s.history[s.lastDate] = yPct;
-    // Streak logic
-    if (yPct >= 80) {
-      s.streak = (s.streak || 0) + 1;
-      if (s.streak > (s.bestStreak || 0)) s.bestStreak = s.streak;
-    } else {
-      s.streak = 0;
-    }
-    // Reset daily
-    s.trackers = {};
-    s.studyGoal = null;
-    s.waterFilled = [false,false,false,false];
-    s.calories = 0;
-    s.timerSessions = [];
-    s.timerTotalMins = 0;
-    s.lastDate = today;
-    save(s);
-  }
-  // Fill missing keys
-  const def = defaultState();
-  Object.keys(def).forEach(k => { if (s[k] === undefined) s[k] = def[k]; });
-  return s;
 }
 
 function calcPct(s) {
@@ -841,9 +846,163 @@ function calcPct(s) {
   return Math.round((done/9)*100);
 }
 
-function save(s) { localStorage.setItem(SK, JSON.stringify(s)); }
+function handleDateRollover(s) {
+  const today = todayStringEST();
+  if (s.lastDate !== today) {
+    const yPct = calcPct(s);
+    s.history = s.history || {};
+    s.history[s.lastDate] = yPct;
+    if (yPct >= 80) {
+      s.streak = (s.streak || 0) + 1;
+      if (s.streak > (s.bestStreak || 0)) s.bestStreak = s.streak;
+    } else {
+      s.streak = 0;
+    }
+    s.trackers = {};
+    s.studyGoal = null;
+    s.waterFilled = [false,false,false,false];
+    s.calories = 0;
+    s.timerSessions = [];
+    s.timerTotalMins = 0;
+    s.lastDate = today;
+    return true;
+  }
+  return false;
+}
 
-let state = getState();
+function fillMissingKeys(s) {
+  const def = defaultState();
+  Object.keys(def).forEach(k => { if (s[k] === undefined) s[k] = def[k]; });
+  return s;
+}
+
+function getStateFromLocal() {
+  const raw = localStorage.getItem(SK);
+  if (!raw) return defaultState();
+  let s = JSON.parse(raw);
+  const rolled = handleDateRollover(s);
+  if (rolled) localStorage.setItem(SK, JSON.stringify(s));
+  return fillMissingKeys(s);
+}
+
+// Deep-clone and strip undefined for Firestore
+function cleanForDb(s) {
+  return JSON.parse(JSON.stringify(s));
+}
+
+function saveLocal(s) {
+  localStorage.setItem(SK, JSON.stringify(s));
+}
+
+function save(s) {
+  saveLocal(s);
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).collection('data').doc('dashboard')
+      .set(cleanForDb(s)).catch(e => console.error('Firestore write error:', e));
+  }
+}
+
+let state = defaultState();
+
+// =====================================================================
+// AUTH
+// =====================================================================
+function signInGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(e => {
+    console.error('Sign-in error:', e);
+    showToast('⚠️ Sign-in failed — try again');
+  });
+}
+
+function doSignOut() {
+  if (confirm('Sign out? Your data is safely saved in the cloud.')) auth.signOut();
+}
+
+function showSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  if (status === 'synced') { el.textContent = '☁ Synced'; el.style.color = 'var(--teal)'; }
+  else if (status === 'syncing') { el.textContent = '⟳ Syncing…'; el.style.color = 'var(--amber)'; }
+  else if (status === 'error') { el.textContent = '⚠ Offline'; el.style.color = 'var(--pink)'; }
+  else { el.textContent = ''; }
+}
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('authOverlay').style.display = 'none';
+    document.getElementById('signOutBtn').style.display = 'block';
+    showSyncStatus('syncing');
+    await loadFromFirestore();
+    showSyncStatus('synced');
+    subscribeToUpdates();
+    initApp();
+  } else {
+    currentUser = null;
+    if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
+    document.getElementById('authOverlay').style.display = 'flex';
+    document.getElementById('signOutBtn').style.display = 'none';
+    showSyncStatus('');
+  }
+});
+
+async function loadFromFirestore() {
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid).collection('data').doc('dashboard').get();
+    if (snap.exists) {
+      let s = snap.data();
+      const rolled = handleDateRollover(s);
+      state = fillMissingKeys(s);
+      if (rolled) save(state);
+      saveLocal(state);
+    } else {
+      // First sign-in: migrate any existing localStorage data to Firestore
+      state = getStateFromLocal();
+      save(state);
+    }
+  } catch(e) {
+    console.error('Firestore load error:', e);
+    state = getStateFromLocal();
+    showSyncStatus('error');
+  }
+}
+
+function subscribeToUpdates() {
+  if (unsubSnapshot) unsubSnapshot();
+  unsubSnapshot = db.collection('users').doc(currentUser.uid).collection('data').doc('dashboard')
+    .onSnapshot(snap => {
+      // hasPendingWrites = this device's own write, skip to avoid render loop
+      if (!snap.exists || snap.metadata.hasPendingWrites) return;
+      const s = snap.data();
+      if (!s) return;
+      isRemoteUpdate = true;
+      state = fillMissingKeys(s);
+      saveLocal(state);
+      renderAll();
+      isRemoteUpdate = false;
+      showSyncStatus('synced');
+    }, err => {
+      console.error('Snapshot error:', err);
+      showSyncStatus('error');
+    });
+}
+
+// Render everything from current state (called on remote updates)
+function renderAll() {
+  renderTrackers();
+  renderSessionChips();
+  updateHoursStudied();
+  renderWeekDays();
+  renderConsistencyCalendar();
+  renderTasks();
+  setMotivation();
+  // Update progress ring without saving (we're processing a remote update)
+  _renderProgress();
+  // Only update notes if user isn't actively typing
+  const ta = document.getElementById('notesArea');
+  if (ta && document.activeElement !== ta) ta.value = state.notes || '';
+}
 
 // =====================================================================
 // CLOCK (EST)
@@ -860,18 +1019,15 @@ function updateClock() {
 // =====================================================================
 // FOCUS TIMER
 // =====================================================================
-let timerMode = 50;        // 50 or 30
+let timerMode = 50;
 let timerSecsTotal = 50*60;
 let timerSecsLeft = 50*60;
 let timerRunning = false;
 let timerInterval = null;
-let timerSessionStartSecs = 0; // secs elapsed this current run (resets on reset, not pause)
-let timerAccumSecs = 0;    // secs accumulated in current session across pauses
-let consecutiveSessions = []; // array of 50|30 for consecutive same-type tracking
-let lastSessionType = null;
+let timerAccumSecs = 0;
 
 function setTimerMode(m) {
-  if (timerRunning) return; // don't switch mid-run
+  if (timerRunning) return;
   timerMode = m;
   timerSecsTotal = m * 60;
   timerSecsLeft = m * 60;
@@ -884,46 +1040,32 @@ function setTimerMode(m) {
 
 function startPauseTimer() {
   if (!timerRunning) {
-    // Start / Resume
     timerRunning = true;
     document.getElementById('startPauseBtn').textContent = '⏸ Pause';
     document.getElementById('startPauseBtn').className = 'timer-btn btn-pause';
-    const startSecs = timerSecsLeft;
     timerInterval = setInterval(() => {
       timerSecsLeft--;
       timerAccumSecs++;
       renderTimerDisplay();
       updateHoursStudied();
-      // Progress bar
       const pct = ((timerSecsTotal - timerSecsLeft) / timerSecsTotal) * 100;
       document.getElementById('timerProgressFill').style.width = pct + '%';
       if (timerSecsLeft <= 0) {
         clearInterval(timerInterval);
         timerRunning = false;
-        onTimerComplete(true);
+        onTimerComplete();
       }
     }, 1000);
   } else {
-    // Pause
     clearInterval(timerInterval);
     timerRunning = false;
     document.getElementById('startPauseBtn').textContent = '▶ Resume';
     document.getElementById('startPauseBtn').className = 'timer-btn btn-start';
-    // Log partial if paused mid-session (only if ≥1 min done)
-    if (timerAccumSecs >= 60) {
-      const partialMins = Math.floor(timerAccumSecs / 60);
-      // Don't double-log — we'll log on reset or completion
-    }
   }
 }
 
 function resetTimer() {
-  const wasRunning = timerRunning;
-  if (timerRunning) {
-    clearInterval(timerInterval);
-    timerRunning = false;
-  }
-  // If there was time accumulated, log it as partial
+  if (timerRunning) { clearInterval(timerInterval); timerRunning = false; }
   if (timerAccumSecs >= 60) {
     const mins = Math.floor(timerAccumSecs / 60);
     state.timerSessions.push({ type: 'partial', mins });
@@ -940,7 +1082,7 @@ function resetTimer() {
   renderTimerDisplay();
 }
 
-function onTimerComplete(fullSession) {
+function onTimerComplete() {
   const mins = timerMode;
   state.timerSessions.push({ type: String(timerMode), mins });
   state.timerTotalMins += mins;
@@ -953,8 +1095,6 @@ function onTimerComplete(fullSession) {
   renderTimerDisplay();
   renderSessionChips();
   updateHoursStudied();
-
-  // Determine break
   const breakInfo = calcBreak();
   showBreakAlert(breakInfo);
   speak(breakInfo.speech);
@@ -962,41 +1102,29 @@ function onTimerComplete(fullSession) {
 }
 
 function calcBreak() {
-  // Look at recent consecutive sessions of same type, or combined ≥2h45m
   const sessions = state.timerSessions;
   const totalToday = state.timerTotalMins;
-
-  // Last session just completed
   const lastType = String(timerMode);
-
-  // Count consecutive same-type from end
   let consecutive = 0;
   for (let i = sessions.length - 1; i >= 0; i--) {
     if (sessions[i].type === lastType) consecutive++;
     else break;
   }
-
-  // Combined time check: if total ≥ 165 mins (2h45m), long break
   if (totalToday > 0 && totalToday % 165 === 0) {
     return { break: 20, speech: `Amazing focus Kavya! You've done ${Math.floor(totalToday/60)} hours ${totalToday%60} minutes. Take a 20 minute break, you've earned it!` };
   }
-
   if (lastType === '50') {
-    // 3rd, 6th, 9th... → 20 min break; others → 10 min
     if (consecutive === 3 || consecutive === 6 || consecutive % 3 === 0) {
       return { break: 20, speech: `50 minutes done Kavya, take a 20 minute break! That's ${consecutive} sessions in a row, incredible!` };
     }
     return { break: 10, speech: `50 minutes done Kavya, take a 10 minute break! Keep crushing it!` };
   }
-
   if (lastType === '30') {
-    // Every 6 consecutive → 30 min break; otherwise → 4 min
     if (consecutive >= 6 && consecutive % 6 === 0) {
       return { break: 30, speech: `Wow Kavya! ${consecutive} sessions of 30 minutes done. Take a 30 minute break, you deserve it!` };
     }
     return { break: 4, speech: `30 minutes done Kavya, take a 4 minute break! Stay in the zone!` };
   }
-
   return { break: 5, speech: `Session complete Kavya! Take a short break.` };
 }
 
@@ -1014,17 +1142,13 @@ function speak(text) {
   if (!('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
-  utt.rate = 0.92;
-  utt.pitch = 1.05;
-  utt.volume = 1;
-  // Pick a nice voice if available
+  utt.rate = 0.92; utt.pitch = 1.05; utt.volume = 1;
   const voices = window.speechSynthesis.getVoices();
   const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google US English') || v.lang === 'en-US');
   if (preferred) utt.voice = preferred;
   window.speechSynthesis.speak(utt);
 }
 
-// Load voices async
 if ('speechSynthesis' in window) {
   window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 }
@@ -1046,7 +1170,6 @@ function renderSessionChips() {
 }
 
 function updateHoursStudied() {
-  // Running total = saved total + current in-progress
   const running = timerRunning ? Math.floor(timerAccumSecs / 60) : 0;
   const total = state.timerTotalMins + running;
   const h = Math.floor(total / 60);
@@ -1086,7 +1209,7 @@ function setCalories() {
   const val = parseInt(document.getElementById('calorieInput').value);
   if (!val || isNaN(val)) return;
   state.calories = val;
-  state.trackers['calories'] = (val >= 1350 && val <= 1400) ? 'done' : (val >= 1200 && val <= 1500 ? 'done' : 'notdone');
+  state.trackers['calories'] = (val >= 1200 && val <= 1500) ? 'done' : 'notdone';
   save(state); renderTrackers(); updateProgress();
   if (val >= 1350 && val <= 1400) showToast('🔥 Perfect calorie range!');
 }
@@ -1099,9 +1222,8 @@ function selectStudy(h) {
   launchConfettiCenter();
 }
 
-// Water: 4 bottles [1L, 1L, 1L, 0.5L]
 const BOTTLE_LABELS = ['1L','1L','1L','0.5L'];
-const BOTTLE_ML = [1000,1000,1000,500]; // total 3500ml
+const BOTTLE_ML = [1000,1000,1000,500];
 
 function renderWaterBottles() {
   const c = document.getElementById('waterBottles');
@@ -1110,7 +1232,7 @@ function renderWaterBottles() {
   state.waterFilled.forEach((filled, i) => {
     const wrap = document.createElement('div');
     wrap.className = 'bottle-wrap';
-    const isBig = i < 3; // first 3 are 1L
+    const isBig = i < 3;
     wrap.innerHTML = `
       <div class="bottle-cap"></div>
       <div class="bottle ${isBig?'bottle-lg':'bottle-sm'} ${filled?'full':''}" title="${BOTTLE_LABELS[i]}">
@@ -1121,7 +1243,6 @@ function renderWaterBottles() {
     wrap.onclick = () => toggleBottle(i);
     c.appendChild(wrap);
   });
-  // Update status
   const filledCount = state.waterFilled.filter(Boolean).length;
   const totalFilled = state.waterFilled.reduce((a,f,i)=>f?a+BOTTLE_ML[i]:a, 0);
   const statusEl = document.getElementById('status-water');
@@ -1152,7 +1273,7 @@ function renderTrackers() {
     const el = document.getElementById('tracker-' + id);
     const st = document.getElementById('status-' + id);
     if (!el || !st) return;
-    if (id === 'water') return; // handled by renderWaterBottles
+    if (id === 'water') return;
     el.classList.remove('done','not-done');
     if (state.trackers[id] === 'done') { el.classList.add('done'); st.textContent = '✓'; }
     else if (state.trackers[id] === 'notdone') { el.classList.add('not-done'); st.textContent = '✗'; }
@@ -1174,7 +1295,7 @@ function renderTrackers() {
 // =====================================================================
 // PROGRESS
 // =====================================================================
-function updateProgress() {
+function _renderProgress() {
   const health = ['calories','protein','water','sleep','exercise'];
   const habits = ['mask','nosugar'];
   const hD = health.filter(k=>state.trackers[k]==='done').length;
@@ -1205,9 +1326,15 @@ function updateProgress() {
   document.getElementById('moodEmoji').textContent = mood.e;
   document.getElementById('moodText').textContent = mood.t;
 
-  // Save today's current pct to history
-  state.history[todayStringEST()] = pct;
-  save(state);
+  return pct;
+}
+
+function updateProgress() {
+  const pct = _renderProgress();
+  if (!isRemoteUpdate) {
+    state.history[todayStringEST()] = pct;
+    save(state);
+  }
   renderWeekDays();
   renderConsistencyCalendar();
 }
@@ -1216,13 +1343,11 @@ function updateProgress() {
 // WEEK AT A GLANCE — Mon to Sun
 // =====================================================================
 function getWeekDates() {
-  // Returns array of Date objects for Mon–Sun of current EST week
   const now = new Date();
   const estStr = now.toLocaleDateString('en-US', { timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit' });
   const [m,d,y] = estStr.split('/').map(Number);
   const today = new Date(y, m-1, d);
-  // day 0=Sun,1=Mon,...,6=Sat; we want Mon=0
-  const dayOfWeek = today.getDay(); // 0=Sun
+  const dayOfWeek = today.getDay();
   const daysFromMon = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
   const monday = new Date(today);
   monday.setDate(today.getDate() - daysFromMon);
@@ -1264,7 +1389,6 @@ function renderWeekDays() {
     else circleClass += ' skipped-day';
 
     const pctLabel = pct !== null ? `${pct}%` : '';
-
     const bubble = document.createElement('div');
     bubble.className = 'day-bubble';
     bubble.innerHTML = `
@@ -1325,7 +1449,6 @@ function renderConsistencyCalendar() {
     grid.appendChild(div);
   });
 
-  // Update stats
   const rate = totalLogged > 0 ? Math.round((fullDays/30)*100) : 0;
   document.getElementById('conStreak').textContent = state.streak || 0;
   document.getElementById('conBest').textContent = state.bestStreak || 0;
@@ -1392,9 +1515,25 @@ function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 function initNotes() {
   const ta = document.getElementById('notesArea');
   ta.value = state.notes || '';
-  ta.addEventListener('input', () => { state.notes = ta.value; save(state); });
+  ta.addEventListener('input', () => {
+    state.notes = ta.value;
+    saveLocal(state);
+    // Debounce Firestore write to avoid hammering on every keystroke
+    clearTimeout(notesDebounce);
+    notesDebounce = setTimeout(() => {
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('data').doc('dashboard')
+          .set(cleanForDb(state)).catch(e => console.error('Notes save error:', e));
+      }
+    }, 1200);
+  });
 }
-function clearNotes() { document.getElementById('notesArea').value=''; state.notes=''; save(state); }
+
+function clearNotes() {
+  document.getElementById('notesArea').value = '';
+  state.notes = '';
+  save(state);
+}
 
 // =====================================================================
 // MOTIVATION
@@ -1413,6 +1552,7 @@ const quotes = [
   "You've made it this far. Trust the process.",
   "One focused day at a time. That's how mountains move.",
 ];
+
 function setMotivation() {
   const d = new Date().getDay();
   document.getElementById('motivationQuote').textContent = quotes[d % quotes.length];
@@ -1467,9 +1607,9 @@ function createParticles() {
 }
 
 // =====================================================================
-// INIT
+// INIT — called after Firebase auth + Firestore load
 // =====================================================================
-function init() {
+function initApp() {
   createParticles();
   updateClock();
   setInterval(updateClock, 1000);
@@ -1482,8 +1622,6 @@ function init() {
   initNotes();
   renderTimerDisplay();
 }
-
-document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
