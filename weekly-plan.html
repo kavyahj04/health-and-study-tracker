@@ -38,62 +38,62 @@ body{background:linear-gradient(135deg,#1a1035 0%,#221645 30%,#1e2a4a 60%,#12203
 @keyframes drift{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(50px,-40px) scale(1.06);}66%{transform:translate(-35px,35px) scale(0.94);}}
 
 /* LAYOUT */
-.app{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:28px 20px 80px;}
+.app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:32px 24px 100px;}
 
-/* PAGE HEADER */
-.page-header{margin-bottom:28px;}
-.page-header h1{font-family:'Orbitron',monospace;font-size:clamp(1.2rem,3vw,1.7rem);font-weight:900;background:linear-gradient(135deg,#c084fc,#06D6A0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;}
-.page-header p{font-size:0.78rem;color:var(--muted);}
-
-/* SECTION TITLE */
-.section-title{font-family:'Orbitron',monospace;font-size:0.66rem;letter-spacing:0.22em;color:var(--muted);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.section-title::after{content:'';flex:1;height:1px;background:var(--cb);}
-
-/* TASKS */
-.tasks-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:28px;}
-@media(max-width:660px){.tasks-grid{grid-template-columns:1fr;}}
-.task-column{background:var(--card);border:1px solid var(--cb);border-radius:20px;padding:18px;backdrop-filter:blur(12px);}
-.col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.col-title{font-size:0.82rem;font-weight:700;color:var(--white);display:flex;align-items:center;gap:8px;}
-.col-count{font-family:'Orbitron',monospace;font-size:0.62rem;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:2px 9px;color:var(--muted);}
-
-/* ADD TASK */
-.add-row{display:flex;gap:8px;margin-bottom:14px;}
-.task-input{flex:1;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px 14px;color:var(--white);font-size:0.8rem;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;}
-.task-input:focus{border-color:var(--violet);}
-.task-input::placeholder{color:var(--muted);}
-.add-btn{padding:9px 14px;border-radius:10px;border:none;background:rgba(124,58,237,0.3);color:var(--violet-light);font-size:0.85rem;cursor:pointer;transition:all 0.2s;}
-.add-btn:hover{background:rgba(124,58,237,0.5);}
-
-/* TASK ITEMS */
-.task-list{display:flex;flex-direction:column;gap:6px;}
-.task-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);transition:all 0.25s;cursor:pointer;group:true;}
-.task-item:hover{background:rgba(255,255,255,0.06);}
-.task-item.done{background:rgba(6,214,160,0.07);border-color:rgba(6,214,160,0.25);opacity:0.7;}
-.task-check{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;font-size:0.72rem;flex-shrink:0;transition:all 0.22s;}
-.task-item.done .task-check{background:var(--teal);border-color:var(--teal);box-shadow:0 0 8px rgba(6,214,160,0.4);}
-.task-text{flex:1;font-size:0.82rem;color:var(--white);line-height:1.3;}
-.task-item.done .task-text{text-decoration:line-through;color:var(--muted);}
-.task-del{opacity:0;width:22px;height:22px;border-radius:6px;border:none;background:rgba(236,72,153,0.18);color:var(--pink);font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;}
-.task-item:hover .task-del{opacity:1;}
+/* TOP ROW */
+.top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;flex-wrap:wrap;gap:12px;}
+.page-title{font-family:'Orbitron',monospace;font-size:clamp(1rem,2.5vw,1.4rem);font-weight:900;background:linear-gradient(135deg,#c084fc,#06D6A0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:0.06em;}
+.add-heading-btn{display:flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;border:1.5px dashed rgba(124,58,237,0.5);background:rgba(124,58,237,0.08);color:var(--violet-light);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.22s;letter-spacing:0.02em;}
+.add-heading-btn:hover{background:rgba(124,58,237,0.18);border-color:var(--violet-light);transform:translateY(-1px);}
 
 /* EMPTY STATE */
-.empty-state{text-align:center;padding:22px;color:var(--muted);font-size:0.78rem;opacity:0.6;}
+.empty-page{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:55vh;gap:16px;opacity:0.5;}
+.empty-page .icon{font-size:3.5rem;}
+.empty-page p{font-size:0.88rem;color:var(--muted);text-align:center;line-height:1.7;max-width:280px;}
 
-/* NOTES */
-.notes-card{background:var(--card);border:1px solid var(--cb);border-radius:20px;padding:20px;backdrop-filter:blur(12px);}
-.notes-textarea{width:100%;min-height:180px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;color:var(--white);font-size:0.83rem;font-family:'Inter',sans-serif;resize:vertical;outline:none;line-height:1.7;transition:border-color 0.2s;}
-.notes-textarea:focus{border-color:rgba(124,58,237,0.5);}
-.notes-textarea::placeholder{color:var(--muted);opacity:0.6;}
-.notes-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
-.notes-chars{font-size:0.68rem;color:var(--muted);}
-.notes-save-indicator{font-size:0.68rem;color:var(--teal);opacity:0;transition:opacity 0.3s;}
-.notes-save-indicator.show{opacity:1;}
+/* HEADING SECTION */
+.heading-section{margin-bottom:40px;animation:fadeUp 0.3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+/* HEADING ROW */
+.heading-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.heading-drag{color:rgba(255,255,255,0.15);font-size:1rem;cursor:grab;padding:2px 4px;flex-shrink:0;}
+.heading-input{flex:1;background:transparent;border:none;outline:none;font-family:'Orbitron',monospace;font-size:clamp(0.95rem,2vw,1.15rem);font-weight:700;color:var(--white);letter-spacing:0.06em;caret-color:var(--violet-light);}
+.heading-input::placeholder{color:rgba(255,255,255,0.2);}
+.heading-line{height:2px;flex:1;background:linear-gradient(90deg,var(--violet),transparent);border-radius:2px;opacity:0.45;}
+.heading-del{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,0.18);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
+.heading-del:hover{background:rgba(236,72,153,0.18);color:var(--pink);}
+
+/* CARDS ROW */
+.cards-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;}
+
+/* CARD */
+.card-wrap{position:relative;width:220px;min-height:130px;flex-shrink:0;animation:fadeUp 0.25s ease;}
+@media(max-width:600px){.card-wrap{width:100%;}}
+.card{width:100%;min-height:130px;background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px 14px 36px;position:relative;transition:border-color 0.2s,box-shadow 0.2s;}
+.card:hover{border-color:rgba(124,58,237,0.35);box-shadow:0 4px 24px rgba(124,58,237,0.14);}
+.card-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;}
+.card-textarea{width:100%;background:transparent;border:none;outline:none;color:var(--white);font-family:'Inter',sans-serif;font-size:0.82rem;line-height:1.65;resize:none;min-height:80px;caret-color:var(--teal);}
+.card-textarea::placeholder{color:rgba(255,255,255,0.22);}
+.card-footer{position:absolute;bottom:0;left:0;right:0;padding:7px 12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.05);}
+.card-chars{font-size:0.6rem;color:rgba(255,255,255,0.18);}
+.card-del{width:22px;height:22px;border-radius:6px;border:none;background:transparent;color:rgba(255,255,255,0.2);font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.18s;}
+.card-del:hover{background:rgba(236,72,153,0.2);color:var(--pink);}
+
+/* ADD CARD BUTTON */
+.add-card-btn{width:220px;min-height:130px;border:1.5px dashed rgba(255,255,255,0.1);border-radius:16px;background:transparent;color:rgba(255,255,255,0.22);font-size:0.78rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:all 0.22s;font-family:'Inter',sans-serif;flex-shrink:0;}
+.add-card-btn:hover{border-color:rgba(124,58,237,0.5);color:var(--violet-light);background:rgba(124,58,237,0.07);}
+.add-card-btn .plus{font-size:1.6rem;line-height:1;}
+@media(max-width:600px){.add-card-btn{width:100%;min-height:70px;flex-direction:row;}}
 
 /* TOAST */
 .toast{position:fixed;bottom:28px;right:22px;background:rgba(6,214,160,0.13);border:1px solid var(--teal);border-radius:12px;padding:11px 20px;font-size:0.8rem;color:var(--teal);font-weight:600;z-index:9998;transform:translateY(100px);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);backdrop-filter:blur(12px);}
 .toast.show{transform:translateY(0);opacity:1;}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px;}
+
+/* SYNC DOT */
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;margin-right:4px;animation:sync-pulse 2s ease infinite;}
+@keyframes sync-pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 </style>
 </head>
 <body>
@@ -107,7 +107,7 @@ body{background:linear-gradient(135deg,#1a1035 0%,#221645 30%,#1e2a4a 60%,#12203
     <a class="nav-link" href="study-tracker.html">📚 Study Tracker</a>
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-left:auto;padding-left:16px;flex-shrink:0;">
-    <span id="syncStatus" style="font-size:0.68rem;font-family:'Orbitron',monospace;"></span>
+    <span id="syncStatus" style="font-size:0.68rem;font-family:'Orbitron',monospace;letter-spacing:0.04em;"></span>
     <button id="signOutBtn" onclick="doSignOut()" style="display:none;padding:5px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'Inter',sans-serif;">Sign Out</button>
   </div>
 </nav>
@@ -117,31 +117,22 @@ body{background:linear-gradient(135deg,#1a1035 0%,#221645 30%,#1e2a4a 60%,#12203
 </div>
 
 <div class="app">
-  <div class="page-header">
-    <h1>📅 WEEKLY PLAN</h1>
-    <p id="weekLabel">This week's goals and tasks</p>
+  <div class="top-row">
+    <div class="page-title">📅 WEEKLY PLAN</div>
+    <button class="add-heading-btn" onclick="addHeading()">
+      <span style="font-size:1.1rem">＋</span> New Heading
+    </button>
   </div>
 
-  <!-- TASKS GRID -->
-  <div class="section-title">TASKS BY CATEGORY</div>
-  <div class="tasks-grid" id="tasksGrid"></div>
-
-  <!-- BRAIN DUMP / NOTES -->
-  <div class="section-title">BRAIN DUMP</div>
-  <div class="notes-card">
-    <textarea class="notes-textarea" id="notesArea" placeholder="Dump everything here — ideas, reminders, random thoughts, whatever's on your mind... 🧠"></textarea>
-    <div class="notes-footer">
-      <div class="notes-chars" id="notesChars">0 chars</div>
-      <div class="notes-save-indicator" id="notesSaveInd">✓ Saved</div>
-    </div>
-  </div>
+  <div id="planBoard"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- AUTH OVERLAY -->
 <div id="authOverlay" style="position:fixed;inset:0;z-index:10000;background:rgba(26,16,53,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;backdrop-filter:blur(20px);">
   <div style="font-family:'Orbitron',monospace;font-size:clamp(1.3rem,3vw,2rem);font-weight:900;background:linear-gradient(135deg,#c084fc,#06D6A0,#EC4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">KAVYA'S HQ</div>
-  <div style="font-size:0.88rem;color:rgba(240,244,255,0.6);max-width:320px;text-align:center;line-height:1.7;">Sign in to save your tasks and notes across devices.</div>
+  <div style="font-size:0.88rem;color:rgba(240,244,255,0.6);max-width:320px;text-align:center;line-height:1.7;">Sign in to save your weekly plan across devices.</div>
   <button onclick="signInGoogle()" style="display:flex;align-items:center;gap:12px;padding:15px 32px;background:white;border:none;border-radius:14px;cursor:pointer;font-size:0.92rem;font-weight:700;color:#1a1a2e;font-family:'Inter',sans-serif;box-shadow:0 4px 24px rgba(0,0,0,0.35);">
     <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
     Continue with Google
@@ -171,185 +162,224 @@ firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-const SK = 'kavya_weekly_v1';
-let currentUser = null, unsubSnapshot = null, isRemoteUpdate = false;
-let notesDebounce = null;
+const SK = 'kavya_weekly_v2';
+let currentUser = null, unsubSnapshot = null;
+let saveDebounce = null;
+let isRemoteUpdate = false;
 
-// ── STATE ──
-const CATEGORIES = [
-  { id:'mcat',    label:'🧬 MCAT',         color:'#7C3AED' },
-  { id:'courses', label:'📖 Courses',       color:'#06D6A0' },
-  { id:'apps',    label:'📋 Applications',  color:'#F59E0B' },
-  { id:'health',  label:'💪 Health',        color:'#EC4899' },
-  { id:'personal',label:'✨ Personal',      color:'#60a5fa' },
-  { id:'other',   label:'🗂 Other',         color:'#a1a1aa' },
+// Card accent colors cycling
+const ACCENTS = [
+  'linear-gradient(90deg,#7C3AED,#A855F7)',
+  'linear-gradient(90deg,#06D6A0,#3B82F6)',
+  'linear-gradient(90deg,#EC4899,#F59E0B)',
+  'linear-gradient(90deg,#60a5fa,#06D6A0)',
+  'linear-gradient(90deg,#F59E0B,#EC4899)',
+  'linear-gradient(90deg,#A855F7,#EC4899)',
 ];
 
-function defaultState() {
-  return { tasks: {}, notes: '' };
-}
-// tasks: { categoryId: [ {id, text, done} ] }
+// ── STATE ──
+// { headings: [ { id, title, accentIndex, cards: [ { id, content } ] } ] }
+function defaultState() { return { headings: [] }; }
+function uid() { return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
 function loadLocal() {
   const raw = localStorage.getItem(SK);
-  return raw ? Object.assign(defaultState(), JSON.parse(raw)) : defaultState();
+  return raw ? JSON.parse(raw) : defaultState();
 }
 function saveLocal(s) { localStorage.setItem(SK, JSON.stringify(s)); }
 
 let state = loadLocal();
 
-function save(s) {
-  saveLocal(s);
-  if (currentUser) {
+// ── SAVE ──
+function save() {
+  saveLocal(state);
+  clearTimeout(saveDebounce);
+  saveDebounce = setTimeout(() => {
+    if (!currentUser) return;
     db.collection('users').doc(currentUser.uid).collection('data').doc('weekly')
-      .set(JSON.parse(JSON.stringify(s))).catch(console.error);
-  }
+      .set(JSON.parse(JSON.stringify(state)))
+      .then(() => showSyncStatus('synced'))
+      .catch(console.error);
+    showSyncStatus('syncing');
+  }, 800);
 }
 
 // ── AUTH ──
 function signInGoogle() {
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(()=>showToast('⚠️ Sign-in failed'));
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(() => showToast('⚠️ Sign-in failed'));
 }
-function doSignOut() { if(confirm('Sign out?')) auth.signOut(); }
+function doSignOut() { if (confirm('Sign out?')) auth.signOut(); }
+
 function showSyncStatus(s) {
-  const el=document.getElementById('syncStatus'); if(!el) return;
-  el.textContent=s==='synced'?'☁ Synced':s==='syncing'?'⟳ Syncing…':'';
-  el.style.color=s==='synced'?'var(--teal)':'var(--amber)';
+  const el = document.getElementById('syncStatus'); if (!el) return;
+  el.innerHTML = s === 'synced' ? '<span class="sync-dot"></span>Saved' : s === 'syncing' ? '⟳ Saving…' : '';
+  el.style.color = s === 'synced' ? 'var(--teal)' : 'var(--amber)';
 }
 
 auth.onAuthStateChanged(async user => {
   if (user) {
-    currentUser=user;
-    document.getElementById('authOverlay').style.display='none';
-    document.getElementById('signOutBtn').style.display='block';
+    currentUser = user;
+    document.getElementById('authOverlay').style.display = 'none';
+    document.getElementById('signOutBtn').style.display = 'block';
     showSyncStatus('syncing');
     try {
-      const snap=await db.collection('users').doc(user.uid).collection('data').doc('weekly').get();
-      if(snap.exists){state=Object.assign(defaultState(),snap.data());saveLocal(state);}
-      else{save(state);}
-    } catch(e){console.error(e);}
+      const snap = await db.collection('users').doc(user.uid).collection('data').doc('weekly').get();
+      if (snap.exists) { state = Object.assign(defaultState(), snap.data()); saveLocal(state); }
+      else { save(); }
+    } catch(e) { console.error(e); }
     showSyncStatus('synced');
     subscribeUpdates();
-    renderAll();
+    render();
   } else {
-    currentUser=null;
-    if(unsubSnapshot){unsubSnapshot();unsubSnapshot=null;}
-    document.getElementById('authOverlay').style.display='flex';
-    document.getElementById('signOutBtn').style.display='none';
-    state=loadLocal(); renderAll();
+    currentUser = null;
+    if (unsubSnapshot) { unsubSnapshot(); unsubSnapshot = null; }
+    document.getElementById('authOverlay').style.display = 'flex';
+    document.getElementById('signOutBtn').style.display = 'none';
+    state = loadLocal(); render();
   }
 });
 
 function subscribeUpdates() {
-  if(unsubSnapshot) unsubSnapshot();
-  unsubSnapshot=db.collection('users').doc(currentUser.uid).collection('data').doc('weekly')
-    .onSnapshot(snap=>{
-      if(!snap.exists||snap.metadata.hasPendingWrites) return;
-      isRemoteUpdate=true;
-      state=Object.assign(defaultState(),snap.data());
-      saveLocal(state); renderAll();
-      isRemoteUpdate=false;
+  if (unsubSnapshot) unsubSnapshot();
+  unsubSnapshot = db.collection('users').doc(currentUser.uid).collection('data').doc('weekly')
+    .onSnapshot(snap => {
+      if (!snap.exists || snap.metadata.hasPendingWrites) return;
+      isRemoteUpdate = true;
+      state = Object.assign(defaultState(), snap.data());
+      saveLocal(state);
+      render();
+      isRemoteUpdate = false;
       showSyncStatus('synced');
     });
 }
 
-// ── TASKS ──
-function getWeekLabel() {
-  const now=new Date();
-  const opts={timeZone:'America/New_York',month:'short',day:'numeric'};
-  const day=now.getDay(), diff=(day===0)?-6:1-day;
-  const mon=new Date(now);mon.setDate(now.getDate()+diff);
-  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
-  return `Week of ${mon.toLocaleDateString('en-US',opts)} – ${sun.toLocaleDateString('en-US',opts)}`;
+// ── DATA MUTATIONS ──
+function addHeading() {
+  const accentIndex = state.headings.length % ACCENTS.length;
+  state.headings.push({ id: uid(), title: '', accentIndex, cards: [] });
+  save(); render();
+  // Focus the new heading input after render
+  const inputs = document.querySelectorAll('.heading-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
 }
 
-function addTask(catId) {
-  const inp=document.getElementById('inp-'+catId);
-  const text=inp.value.trim(); if(!text) return;
-  if(!state.tasks[catId]) state.tasks[catId]=[];
-  state.tasks[catId].push({id:Date.now()+'',text,done:false});
-  inp.value=''; save(state); renderCategory(catId);
+function deleteHeading(hid) {
+  state.headings = state.headings.filter(h => h.id !== hid);
+  save(); render();
 }
 
-function toggleTask(catId, taskId) {
-  const list=state.tasks[catId]||[];
-  const t=list.find(t=>t.id===taskId); if(!t) return;
-  t.done=!t.done; save(state); renderCategory(catId);
+function updateHeadingTitle(hid, val) {
+  const h = state.headings.find(h => h.id === hid);
+  if (h) { h.title = val; save(); }
 }
 
-function deleteTask(catId, taskId) {
-  state.tasks[catId]=(state.tasks[catId]||[]).filter(t=>t.id!==taskId);
-  save(state); renderCategory(catId);
+function addCard(hid) {
+  const h = state.headings.find(h => h.id === hid); if (!h) return;
+  const newCard = { id: uid(), content: '' };
+  h.cards.push(newCard);
+  save(); renderHeading(hid);
+  // Focus the new card textarea
+  setTimeout(() => {
+    const ta = document.getElementById('card-' + newCard.id);
+    if (ta) ta.focus();
+  }, 50);
 }
 
-function renderCategory(catId) {
-  const el=document.getElementById('tasks-'+catId); if(!el) return;
-  const list=state.tasks[catId]||[];
-  const sorted=[...list.filter(t=>!t.done),...list.filter(t=>t.done)];
-  const cat=CATEGORIES.find(c=>c.id===catId);
-  const countEl=document.getElementById('count-'+catId);
-  const done=list.filter(t=>t.done).length;
-  if(countEl) countEl.textContent=`${done}/${list.length}`;
-  if(!sorted.length){el.innerHTML='<div class="empty-state">No tasks yet<br><span style="font-size:1.2rem">✨</span></div>';return;}
-  el.innerHTML=sorted.map(t=>`
-    <div class="task-item${t.done?' done':''}" onclick="toggleTask('${catId}','${t.id}')">
-      <div class="task-check" style="${t.done?'':'border-color:'+cat.color+'44'}">${t.done?'✓':''}</div>
-      <div class="task-text">${escHtml(t.text)}</div>
-      <button class="task-del" onclick="event.stopPropagation();deleteTask('${catId}','${t.id}')">×</button>
-    </div>`).join('');
+function deleteCard(hid, cid) {
+  const h = state.headings.find(h => h.id === hid); if (!h) return;
+  h.cards = h.cards.filter(c => c.id !== cid);
+  save(); renderHeading(hid);
 }
 
-function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function buildGrid() {
-  const grid=document.getElementById('tasksGrid'); grid.innerHTML='';
-  CATEGORIES.forEach(cat=>{
-    const col=document.createElement('div'); col.className='task-column';
-    col.innerHTML=`
-      <div class="col-header">
-        <div class="col-title"><span>${cat.label}</span></div>
-        <div class="col-count" id="count-${cat.id}">0/0</div>
-      </div>
-      <div class="add-row">
-        <input class="task-input" id="inp-${cat.id}" placeholder="Add task…" onkeydown="if(event.key==='Enter')addTask('${cat.id}')">
-        <button class="add-btn" onclick="addTask('${cat.id}')">+</button>
-      </div>
-      <div class="task-list" id="tasks-${cat.id}"></div>`;
-    grid.appendChild(col);
-    renderCategory(cat.id);
-  });
-}
-
-// ── NOTES ──
-function renderNotes() {
-  const ta=document.getElementById('notesArea'); if(!ta) return;
-  if(!isRemoteUpdate) {} // don't overwrite if user is typing (handled by remote flag)
-  ta.value=state.notes||'';
-  document.getElementById('notesChars').textContent=`${(state.notes||'').length} chars`;
-}
-
-function initNotes() {
-  const ta=document.getElementById('notesArea');
-  ta.addEventListener('input',()=>{
-    state.notes=ta.value;
-    saveLocal(state);
-    document.getElementById('notesChars').textContent=`${ta.value.length} chars`;
-    clearTimeout(notesDebounce);
-    notesDebounce=setTimeout(()=>{
-      if(currentUser){
-        db.collection('users').doc(currentUser.uid).collection('data').doc('weekly')
-          .set(JSON.parse(JSON.stringify(state))).then(()=>{
-            const ind=document.getElementById('notesSaveInd');
-            ind.classList.add('show'); setTimeout(()=>ind.classList.remove('show'),1800);
-          }).catch(console.error);
-      }
-    },1200);
-  });
+function updateCard(hid, cid, val) {
+  const h = state.headings.find(h => h.id === hid); if (!h) return;
+  const c = h.cards.find(c => c.id === cid); if (!c) return;
+  c.content = val; save();
 }
 
 // ── RENDER ──
-function renderAll() {
-  buildGrid(); renderNotes();
+function render() {
+  const board = document.getElementById('planBoard');
+  if (!state.headings.length) {
+    board.innerHTML = `<div class="empty-page"><div class="icon">📋</div><p>No headings yet.<br>Hit <strong>+ New Heading</strong> to start building your plan.</p></div>`;
+    return;
+  }
+  board.innerHTML = '';
+  state.headings.forEach(h => {
+    const sec = document.createElement('div');
+    sec.className = 'heading-section';
+    sec.id = 'section-' + h.id;
+    board.appendChild(sec);
+    renderHeading(h.id);
+  });
+}
+
+function renderHeading(hid) {
+  const h = state.headings.find(h => h.id === hid);
+  const sec = document.getElementById('section-' + hid);
+  if (!h || !sec) return;
+  const accent = ACCENTS[h.accentIndex ?? 0];
+
+  sec.innerHTML = `
+    <div class="heading-row">
+      <input class="heading-input" id="hinp-${h.id}" value="${escHtml(h.title)}" placeholder="Heading…" maxlength="80"
+        oninput="updateHeadingTitle('${h.id}', this.value)"
+        onkeydown="if(event.key==='Enter')event.target.blur()">
+      <div class="heading-line" style="background:${accent.replace('linear-gradient(90deg,','linear-gradient(90deg,').replace(')','')+',transparent)'};"></div>
+      <button class="heading-del" title="Delete section" onclick="confirmDeleteHeading('${h.id}')">✕</button>
+    </div>
+    <div class="cards-row" id="cards-${h.id}">
+      ${h.cards.map(c => cardHTML(h.id, c, accent)).join('')}
+      <button class="add-card-btn" onclick="addCard('${h.id}')">
+        <span class="plus">＋</span>
+        <span>Add card</span>
+      </button>
+    </div>`;
+
+  // Re-attach textarea listeners (can't use oninput with dynamic IDs safely in innerHTML)
+  h.cards.forEach(c => {
+    const ta = document.getElementById('card-' + c.id);
+    if (!ta) return;
+    ta.addEventListener('input', () => {
+      autoResize(ta);
+      updateCard(h.id, c.id, ta.value);
+      const ch = ta.closest('.card-wrap').querySelector('.card-chars');
+      if (ch) ch.textContent = ta.value.length ? ta.value.length + ' chars' : '';
+    });
+    autoResize(ta);
+  });
+}
+
+function cardHTML(hid, c, accent) {
+  return `<div class="card-wrap" id="cwrap-${c.id}">
+    <div class="card">
+      <div class="card-accent" style="background:${accent}"></div>
+      <textarea class="card-textarea" id="card-${c.id}" placeholder="Add content…" rows="1">${escHtml(c.content)}</textarea>
+      <div class="card-footer">
+        <span class="card-chars">${c.content.length ? c.content.length + ' chars' : ''}</span>
+        <button class="card-del" title="Delete card" onclick="deleteCard('${hid}','${c.id}')">✕</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function confirmDeleteHeading(hid) {
+  const h = state.headings.find(h => h.id === hid);
+  const name = h?.title || 'this section';
+  if (h && h.cards.length > 0) {
+    if (!confirm(`Delete "${name}" and all its cards?`)) return;
+  }
+  deleteHeading(hid);
+}
+
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ── TOAST ──
@@ -357,9 +387,7 @@ let toastT;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);}
 
 // ── INIT ──
-document.getElementById('weekLabel').textContent=getWeekLabel();
-buildGrid();
-initNotes();
+render();
 </script>
 </body>
 </html>
