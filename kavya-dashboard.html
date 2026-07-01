@@ -156,7 +156,10 @@ body{background:linear-gradient(135deg,#1a1035 0%,#221645 30%,#1e2a4a 60%,#12203
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-left:auto;padding-left:16px;flex-shrink:0;">
     <span id="syncStatus" style="font-size:0.68rem;font-family:'Orbitron',monospace;letter-spacing:0.05em;"></span>
-    <button id="signOutBtn" onclick="doSignOut()" style="display:none;padding:5px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--muted);font-size:0.72rem;cursor:pointer;">Sign Out</button>
+    <div id="userChip" style="display:none;align-items:center;gap:7px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px 4px 4px;cursor:pointer;" onclick="doSignOut()" title="Click to sign out">
+      <img id="userAvatar" src="" width="24" height="24" style="border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">
+      <span id="userName" style="font-size:0.72rem;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    </div>
   </div>
 </nav>
 
@@ -475,11 +478,13 @@ auth.onAuthStateChanged(async user=>{
   if(user){
     currentUser=user;
     document.getElementById('authOverlay').style.display='none';
-    document.getElementById('signOutBtn').style.display='block';
+    const chip=document.getElementById('userChip');
+    if(chip){chip.style.display='flex';document.getElementById('userName').textContent=user.displayName||user.email||'Signed in';document.getElementById('userAvatar').src=user.photoURL||'';}
+
     showSyncStatus('syncing');
     try{const snap=await db.collection('users').doc(user.uid).collection('data').doc('dashboard').get();if(snap.exists){state=fillMissingKeys(snap.data());if(handleDateRollover(state))save(state);saveLocal(state);}else{state=getStateFromLocal();save(state);}}catch(e){state=getStateFromLocal();showSyncStatus('error');}
     showSyncStatus('synced');subscribeToUpdates();initApp();
-  }else{currentUser=null;if(unsubSnapshot){unsubSnapshot();unsubSnapshot=null;}document.getElementById('authOverlay').style.display='flex';document.getElementById('signOutBtn').style.display='none';}
+  }else{currentUser=null;if(unsubSnapshot){unsubSnapshot();unsubSnapshot=null;}document.getElementById('authOverlay').style.display='flex';const chip=document.getElementById('userChip');if(chip)chip.style.display='none';}
 });
 
 function subscribeToUpdates(){
