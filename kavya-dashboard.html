@@ -437,14 +437,26 @@ function defaultState(){
 }
 
 // New proportional scoring
+function scoreCalories(cal){
+  if(!cal) return 0;
+  // Under target: proportional. At/over 1350: 100%. Over by 100+ cal: -10% per 100.
+  let s=Math.min(cal/1350,1)*100;
+  if(cal>1350){const excess=cal-1350;s=Math.max(100-Math.floor(excess/100)*10,0);}
+  return s;
+}
+function scoreStudy(timerMins,goalH){
+  // Clicking a goal gives immediate credit (goal/11). Logged mins can only increase it.
+  const goalMins=(goalH||0)*60;
+  return Math.min(Math.max(timerMins||0,goalMins)/660,1)*100;
+}
 function calcPct(s){
-  const calS=s.calories?Math.min(s.calories/1350,1)*100:0;
+  const calS=scoreCalories(s.calories);
   const exS=(s.trackers?.exercise==='done')?100:0;
   const wMl=(s.waterFilled||[]).reduce((a,f,i)=>f?a+BOTTLE_ML[i]:a,0);
   const watS=Math.min(wMl/3500,1)*100;
   const proS=s.protein?Math.min(s.protein/100,1)*100:0;
   const slpS=(s.trackers?.sleep==='done')?100:0;
-  const stuS=Math.min((s.timerTotalMins||0)/660,1)*100;
+  const stuS=scoreStudy(s.timerTotalMins,s.studyGoal);
   const mskS=(s.trackers?.mask==='done')?100:0;
   const sugS=(s.trackers?.nosugar==='done')?100:0;
   return Math.round((calS+exS+watS+proS+slpS+stuS+mskS+sugS)/8);
@@ -520,18 +532,26 @@ const doneMsg=id=>({sleep:'😴 Sleep logged!',exercise:'🏃 Exercise done!',ma
 function setCalories(){
   const val=parseInt(document.getElementById('calorieInput').value);
   if(!val||isNaN(val))return;
-  state.calories=val;save(state);renderTrackers();updateProgress();
-  if(val>=1350&&val<=1400)showToast('🔥 Perfect calorie range!');
+  state.calories=val;
+  save(state);renderTrackers();updateProgress();
+  if(val>=1350&&val<=1450)showToast('🔥 Calorie goal hit!');
+  else if(val>1450)showToast(`⚠️ ${val-1350} cal over — -${Math.floor((val-1350)/100)*10}% penalty`);
 }
 
 function setProtein(){
   const val=parseInt(document.getElementById('proteinInput').value);
   if(!val||isNaN(val))return;
-  state.protein=val;save(state);renderTrackers();updateProgress();
-  if(val>=100)showToast('💪 100g protein achieved!');
+  state.protein=val;
+  save(state);renderTrackers();updateProgress();
+  if(val>=100)showToast('💪 100g protein — 100%!');
+  else showToast(`💪 ${val}g logged — ${Math.round(val)}%`);
 }
 
-function selectStudy(h){state.studyGoal=h;save(state);renderTrackers();showToast(`📚 ${h}h goal set!`);}
+function selectStudy(h){
+  state.studyGoal=h;
+  save(state);renderTrackers();updateProgress();
+  showToast(`📚 ${h}h goal set — ${Math.round(scoreStudy(state.timerTotalMins,h))}% study progress!`);
+}
 
 const BOTTLE_LABELS=['1L','1L','1L','0.5L'];
 
@@ -571,30 +591,41 @@ function renderTrackers(){
     else st.textContent='–';
   });
   // Calories
-  if(state.calories){
-    const ci=document.getElementById('calorieInput');if(ci&&!ci.value)ci.value=state.calories;
-    const pct=Math.min(state.calories/1350,1)*100;
-    document.getElementById('calorieFill').style.width=pct+'%';
+  {
+    const cal=state.calories||0;
+    const ci=document.getElementById('calorieInput');if(ci&&!ci.value&&cal)ci.value=cal;
+    const barPct=Math.min(cal/1350,1)*100;
+    document.getElementById('calorieFill').style.width=barPct+'%';
     const el=document.getElementById('tracker-calories'),st=document.getElementById('status-calories');
-    if(el){el.classList.remove('done','not-done');if(state.calories>=1350)el.classList.add('done');}
-    if(st)st.textContent=state.calories>=1350?'✓':state.calories+'kcal';
+    if(el){
+      el.classList.remove('done','not-done');
+      if(cal>=1350&&cal<=1450){el.classList.add('done');}        // perfect zone → green
+      else if(cal>1450){el.classList.add('not-done');}           // too much → red
+      else if(cal>0){/* under target — no colour yet */}
+    }
+    if(st)st.textContent=cal>=1350?(cal<=1450?'✓':'⚠️'+cal):cal?cal+'kcal':'–';
   }
   // Protein
-  if(state.protein){
-    const pi=document.getElementById('proteinInput');if(pi&&!pi.value)pi.value=state.protein;
-    const pct=Math.min(state.protein/100,1)*100;
-    document.getElementById('proteinFill').style.width=pct+'%';
+  {
+    const pro=state.protein||0;
+    const pi=document.getElementById('proteinInput');if(pi&&!pi.value&&pro)pi.value=pro;
+    const barPct=Math.min(pro/100,1)*100;
+    document.getElementById('proteinFill').style.width=barPct+'%';
     const el=document.getElementById('tracker-protein'),st=document.getElementById('status-protein');
-    if(el){el.classList.remove('done','not-done');if(state.protein>=100)el.classList.add('done');}
-    if(st)st.textContent=state.protein>=100?'✓':state.protein+'g';
+    if(el){
+      el.classList.remove('done','not-done');
+      if(pro>=100){el.classList.add('done');}                    // 100g+ → green
+      else if(pro>0){/* partial, no colour */}
+    }
+    if(st)st.textContent=pro>=100?'✓':pro?pro+'g':'–';
   }
   // Water
   renderWaterBottles();
-  // Study
+  // Study — uses scoreStudy so clicking goal immediately adds progress
   const sMins=state.timerTotalMins||0;
   const sH=Math.floor(sMins/60),sM=sMins%60;
-  const sPct=Math.min(sMins/660,1)*100;
   const goal=state.studyGoal||11;
+  const sPct=scoreStudy(sMins,goal);
   const sl=document.getElementById('studyLoggedSub');if(sl)sl.textContent=`${sH}h ${sM}m logged · ${goal}h goal`;
   const sf=document.getElementById('studyFill');if(sf)sf.style.width=sPct+'%';
   const ss=document.getElementById('status-study');if(ss)ss.textContent=sPct>=100?'✓':Math.round(sPct)+'%';
@@ -603,13 +634,13 @@ function renderTrackers(){
 
 // ── PROGRESS ──
 function _renderProgress(){
-  const calS=state.calories?Math.min(state.calories/1350,1)*100:0;
+  const calS=scoreCalories(state.calories);
   const exS=(state.trackers?.exercise==='done')?100:0;
   const wMl=state.waterFilled.reduce((a,f,i)=>f?a+BOTTLE_ML[i]:a,0);
   const watS=Math.min(wMl/3500,1)*100;
   const proS=state.protein?Math.min(state.protein/100,1)*100:0;
   const slpS=(state.trackers?.sleep==='done')?100:0;
-  const stuS=Math.min((state.timerTotalMins||0)/660,1)*100;
+  const stuS=scoreStudy(state.timerTotalMins,state.studyGoal);
   const mskS=(state.trackers?.mask==='done')?100:0;
   const sugS=(state.trackers?.nosugar==='done')?100:0;
   const overall=Math.round((calS+exS+watS+proS+slpS+stuS+mskS+sugS)/8);
